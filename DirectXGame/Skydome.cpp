@@ -26,3 +26,5 @@ void SkyDome::Draw() {
 	// 3Dモデル描画
 	model_->Draw(worldTransform_, *camera_);
 }
+
+void SkyDome::SetRotation(float rotationY) { worldTransform_.rotation_.y = rotationY; }

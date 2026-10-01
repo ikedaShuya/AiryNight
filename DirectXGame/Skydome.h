@@ -23,6 +23,9 @@ public:
 	/// </summary>
 	void Draw();
 
+	// 回転を設定
+	void SetRotation(float rotationY);
+
 private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;

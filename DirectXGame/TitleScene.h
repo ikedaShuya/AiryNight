@@ -23,7 +23,7 @@ public:
 	void Draw();
 
 	~TitleScene();
-
+	
 	// デスフラグのgetter
 	bool IsFinished() const { return finished_; }
 
@@ -32,10 +32,13 @@ private:
 	// 終了フラグ
 	bool finished_ = false;
 
-
 	// ビュープロジェクション
 	KamataEngine::Camera camera_;
 	KamataEngine::WorldTransform worldTransformTitle_;
+
+	float skyRotation_ = 0.0f;
+
+	float pressSpaceTimer_ = 0.0f;
 
 	KamataEngine::Model* modelTitle_ = nullptr;
 

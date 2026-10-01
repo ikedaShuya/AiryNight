@@ -25,6 +25,13 @@ void TitleScene::Update() {
 		finished_ = true;
 	}
 
+	// タイトル画面だけ空をゆっくり回転
+	skyRotation_ += 0.001f;
+	skyDome_->SetRotation(skyRotation_);
+
+	// PRESS SPACE用タイマー
+	pressSpaceTimer_ += 1.0f;
+
 	skyDome_->Update();
 
 	WorldTransformUpdate(worldTransformTitle_);
