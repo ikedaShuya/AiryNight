@@ -1,3 +1,4 @@
+#include "Fade.h"
 #include "ClearScene.h"
 #include "GameOverScene.h"
 #include "GameScene.h"
@@ -12,6 +13,11 @@ TitleScene* titleScene = nullptr;
 ClearScene* clearScene = nullptr;
 GameOverScene* gameOverScene = nullptr;
 
+Fade fade;
+
+bool isChangingScene = false;
+bool sceneChanged = false;
+
 // シーン（型）
 enum class Scene {
 	kUnknown = 0,
@@ -24,72 +30,102 @@ enum class Scene {
 // 現在シーン（型）
 Scene scene = Scene::kUnknown;
 
-static void ChangeScene() {
+
+static bool IsSceneFinished() {
 	switch (scene) {
 	case Scene::kTitle:
-		if (titleScene->IsFinished()) {
-			// シーン変更
-			scene = Scene::kGame;
-			// 旧シーンの解放
-			delete titleScene;
-			titleScene = nullptr;
-			// 新シーンの生成と初期化
-			gameScene = new GameScene;
-			gameScene->Initialize();
-		}
-		break;
+		return titleScene->IsFinished();
+
 	case Scene::kGame:
-		if (gameScene->IsFinished()) {
+		return gameScene->IsFinished();
 
-			if (gameScene->GetResult() == GameResult::Clear) {
-
-				// シーン変更
-				scene = Scene::kClear;
-				// 旧シーンの解放
-				delete gameScene;
-				gameScene = nullptr;
-				// 新シーンの生成と初期化
-				clearScene = new ClearScene;
-				clearScene->Initialize();
-			} else if (gameScene->GetResult() == GameResult::GameOver) {
-
-				// シーン変更
-				scene = Scene::kGameOver;
-				// 旧シーンの解放
-				delete gameScene;
-				gameScene = nullptr;
-				// 新シーンの生成と初期化
-				gameOverScene = new GameOverScene;
-				gameOverScene->Initialize();
-			}
-		}
-		break;
 	case Scene::kClear:
-		if (clearScene->IsFinished()) {
+		return clearScene->IsFinished();
 
-			// シーン変化
-			scene = Scene::kTitle;
-			// 旧シーンの解放
-			delete clearScene;
-			clearScene = nullptr;
-			// 新シーンの生成と初期化
-			titleScene = new TitleScene;
-			titleScene->Initialize();
-		}
-		break;
 	case Scene::kGameOver:
-		if (gameOverScene->IsFinished()) {
+		return gameOverScene->IsFinished();
 
-			// シーン変化
-			scene = Scene::kTitle;
-			// 旧シーンの解放
-			delete gameOverScene;
-			gameOverScene = nullptr;
-			// 新シーンの生成と初期化
-			titleScene = new TitleScene;
-			titleScene->Initialize();
+	default:
+		return false;
+	}
+}
+
+static void ChangeSceneNow() {
+	switch (scene) {
+	case Scene::kTitle:
+		scene = Scene::kGame;
+
+		delete titleScene;
+		titleScene = nullptr;
+
+		gameScene = new GameScene;
+		gameScene->Initialize();
+		break;
+
+	case Scene::kGame:
+		if (gameScene->GetResult() == GameResult::Clear) {
+			scene = Scene::kClear;
+
+			delete gameScene;
+			gameScene = nullptr;
+
+			clearScene = new ClearScene;
+			clearScene->Initialize();
+		} else if (gameScene->GetResult() == GameResult::GameOver) {
+			scene = Scene::kGameOver;
+
+			delete gameScene;
+			gameScene = nullptr;
+
+			gameOverScene = new GameOverScene;
+			gameOverScene->Initialize();
 		}
 		break;
+
+	case Scene::kClear:
+		scene = Scene::kTitle;
+
+		delete clearScene;
+		clearScene = nullptr;
+
+		titleScene = new TitleScene;
+		titleScene->Initialize();
+		break;
+
+	case Scene::kGameOver:
+		scene = Scene::kTitle;
+
+		delete gameOverScene;
+		gameOverScene = nullptr;
+
+		titleScene = new TitleScene;
+		titleScene->Initialize();
+		break;
+
+	default:
+		break;
+	}
+}
+
+static void ChangeScene() {
+	// シーン切り替えを開始
+	if (!isChangingScene && IsSceneFinished()) {
+		isChangingScene = true;
+		sceneChanged = false;
+		fade.StartFadeOut();
+	}
+
+	// 画面が完全に黒くなったらシーンを切り替える
+	if (isChangingScene && !sceneChanged && fade.IsFadeOutFinished()) {
+		ChangeSceneNow();
+		fade.StartFadeIn();
+		sceneChanged = true;
+	}
+
+	// フェードインが終わったら通常状態に戻す
+	if (isChangingScene && sceneChanged && fade.IsFadeInFinished()) {
+		isChangingScene = false;
+		sceneChanged = false;
 	}
 }
 
@@ -132,6 +168,7 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
 	Initialize(L"LE3C_04_イケダ_シュウヤ_エアリーナイト");
+	fade.Initialize();
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
@@ -148,6 +185,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 			break;
 		}
 
+		// フェード更新
+		fade.Update();
+
 		// シーン切り替え
 		ChangeScene();
 		// 現在シーン更新
@@ -158,6 +198,9 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 		// 現在シーンの描画
 		DrawScene();
+
+		// フェード描画
+		fade.Draw();
 
 		// 描画終了
 		dxCommon->PostDraw();

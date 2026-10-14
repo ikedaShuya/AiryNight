@@ -40,10 +40,20 @@ private:
 
 	float pressSpaceTimer_ = 0.0f;
 
+	float titleTimer_ = 0.0f;
+
+	float cameraTimer_ = 0.0f;
+
+	float startTimer_ = 0.0f;
+	bool isStarting_ = false;
+		
 	KamataEngine::Model* modelTitle_ = nullptr;
 
 	SkyDome* skyDome_ = nullptr;
 
 	// 3Dモデル
 	KamataEngine::Model* modelSkyDome_ = nullptr;
+
+	// PRESS SPACE
+	KamataEngine::Sprite* pressSpaceSprite_ = nullptr;
 };
