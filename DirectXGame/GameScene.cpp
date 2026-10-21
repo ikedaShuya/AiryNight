@@ -14,6 +14,24 @@ void GameScene::Initialize() {
 	mapChipField_ = new MapChipField;
 	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
 
+	
+	// ゴールの位置を設定する
+	goalPosition_ = mapChipField_->GetMapChipPositionByIndex(97, 12);
+
+	// ゴールの棒を初期化する
+	worldTransformGoalPole_.Initialize();
+	worldTransformGoalPole_.scale_ = {0.15f, 4.0f, 0.15f};
+	worldTransformGoalPole_.translation_ = {goalPosition_.x, goalPosition_.y + 1.0f, goalPosition_.z};
+
+	// ゴールの旗を初期化する
+	worldTransformGoalFlag_.Initialize();
+	worldTransformGoalFlag_.scale_ = {0.8f, 0.5f, 0.1f};
+	worldTransformGoalFlag_.translation_ = {goalPosition_.x + 0.4f, goalPosition_.y + 2.8f, goalPosition_.z};
+
+	// ワールド変換を更新する
+	WorldTransformUpdate(worldTransformGoalPole_);
+	WorldTransformUpdate(worldTransformGoalFlag_);
+
 	GenerateBlocks();
 
 	// 3Dモデルデータの生成
@@ -28,6 +46,9 @@ void GameScene::Initialize() {
 	player_->Initialize(modelPlayer_, swordModel_, &camera_, playerPosition);
 
 	player_->SetMapChipField(mapChipField_);
+	// ゲーム開始演出中は操作できないようにする
+	player_->SetControllable(false);
+
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 
 	 // 敵の数
@@ -81,6 +102,21 @@ void GameScene::Initialize() {
 	skyDome_->Initialize(modelSkyDome_, &camera_);
 
 	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
+
+	// カウントダウン画像を読み込む
+	countdown3Sprite_ = Sprite::Create(TextureManager::Load("countdown_3.png"), {640.0f, 360.0f});
+
+	countdown2Sprite_ = Sprite::Create(TextureManager::Load("countdown_2.png"), {640.0f, 360.0f});
+
+	countdown1Sprite_ = Sprite::Create(TextureManager::Load("countdown_1.png"), {640.0f, 360.0f});
+
+	countdownGoSprite_ = Sprite::Create(TextureManager::Load("countdown_go.png"), {640.0f, 360.0f});
+
+	// 画像の中心を画面中央に合わせる
+	countdown3Sprite_->SetAnchorPoint({0.5f, 0.5f});
+	countdown2Sprite_->SetAnchorPoint({0.5f, 0.5f});
+	countdown1Sprite_->SetAnchorPoint({0.5f, 0.5f});
+	countdownGoSprite_->SetAnchorPoint({0.5f, 0.5f});
 }
 
 void GameScene::Update() {
@@ -92,11 +128,39 @@ void GameScene::Update() {
 		return;
 	}
 
-	// 敵全滅判定
-	if (enemies_.empty()) {
+	// ゴール判定
+	KamataEngine::Vector3 playerPosition = player_->GetWorldPosition();
+
+	float distanceX = playerPosition.x - goalPosition_.x;
+	float distanceY = playerPosition.y - goalPosition_.y;
+
+	if (distanceX > -1.0f && distanceX < 1.0f && distanceY > -1.0f && distanceY < 3.0f) {
 		result_ = GameResult::Clear;
 		finished_ = true;
 		return;
+	}
+
+	// ゲーム開始演出のタイマー
+	if (startTimer_ < kGameStartFrame) {
+		startTimer_++;
+	}
+
+	// カウントダウンの数字を設定
+	countdownNumber_ = 0;
+
+	if (startTimer_ >= kStagePreviewFrame && startTimer_ < kStagePreviewFrame + 60) {
+		countdownNumber_ = 3;
+	} else if (startTimer_ >= kStagePreviewFrame + 60 && startTimer_ < kStagePreviewFrame + 120) {
+		countdownNumber_ = 2;
+	} else if (startTimer_ >= kStagePreviewFrame + 120 && startTimer_ < kStagePreviewFrame + 180) {
+		countdownNumber_ = 1;
+	} else if (startTimer_ >= kStagePreviewFrame + kCountdownFrame && startTimer_ < kGameStartFrame) {
+		countdownNumber_ = 4; // GO!
+	}
+
+	// 演出が終わったら操作を許可
+	if (startTimer_ >= kGameStartFrame) {
+		player_->SetControllable(true);
 	}
 
 	skyDome_->Update();
@@ -127,14 +191,18 @@ void GameScene::Update() {
 		}
 	}
 
-	for (Enemy* enemy_ : enemies_) {
-		enemy_->Update(player_);
-	}
-
 	player_->Update();
 
-	// 全ての当たり判定を行う
-	CheckAllCollisions();
+	// ゲーム開始演出が終わってから敵を動かす
+	if (startTimer_ >= kGameStartFrame) {
+
+		for (Enemy* enemy_ : enemies_) {
+			enemy_->Update(player_);
+		}
+
+		// 全ての当たり判定を行う
+		CheckAllCollisions();
+	}
 }
 
 void GameScene::Draw() {
@@ -154,6 +222,10 @@ void GameScene::Draw() {
 		}
 	}
 
+	// ゴールの旗を描画
+	modelBlock_->Draw(worldTransformGoalPole_, camera_);
+	modelBlock_->Draw(worldTransformGoalFlag_, camera_);
+
 	// 自キャラの描画
 	player_->Draw();
 
@@ -171,6 +243,17 @@ void GameScene::Draw() {
 	hpBarFg_->Draw();
 	hpBarBg_->Draw();
 	aSprite_->Draw();
+
+	// カウントダウン表示
+	if (countdownNumber_ == 3) {
+		countdown3Sprite_->Draw();
+	} else if (countdownNumber_ == 2) {
+		countdown2Sprite_->Draw();
+	} else if (countdownNumber_ == 1) {
+		countdown1Sprite_->Draw();
+	} else if (countdownNumber_ == 4) {
+		countdownGoSprite_->Draw();
+	}
 
 	// スプライト描画後処理
 	Sprite::PostDraw();
@@ -207,6 +290,10 @@ GameScene::~GameScene() {
 
 	delete skyDome_;
 	delete modelSkyDome_;
+	delete countdown3Sprite_;
+	delete countdown2Sprite_;
+	delete countdown1Sprite_;
+	delete countdownGoSprite_;
 }
 
 void GameScene::GenerateBlocks() {

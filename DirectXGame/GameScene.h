@@ -45,6 +45,11 @@ private:
 	// ブロックモデルデータ
 	KamataEngine::Model* modelBlock_ = nullptr;
 
+	// ゴールの旗
+	KamataEngine::WorldTransform worldTransformGoalPole_;
+	KamataEngine::WorldTransform worldTransformGoalFlag_;
+	KamataEngine::Vector3 goalPosition_;
+
 	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
 
 	// マップチップフィールド
@@ -78,4 +83,22 @@ private:
 	GameResult result_ = GameResult::None;	
 
 	KamataEngine::Sprite* aSprite_ = nullptr;
+
+	
+	// ゲーム開始演出
+	int startTimer_ = 0;
+
+	// ステージ確認1秒 + カウントダウン3秒 + GO! 0.5秒
+	static constexpr int kStagePreviewFrame = 60;
+	static constexpr int kCountdownFrame = 180;
+	static constexpr int kGoFrame = 30;
+	static constexpr int kGameStartFrame = kStagePreviewFrame + kCountdownFrame + kGoFrame;
+
+	// カウントダウン表示用
+	KamataEngine::Sprite* countdown3Sprite_ = nullptr;
+	KamataEngine::Sprite* countdown2Sprite_ = nullptr;
+	KamataEngine::Sprite* countdown1Sprite_ = nullptr;
+	KamataEngine::Sprite* countdownGoSprite_ = nullptr;
+
+	int countdownNumber_ = 0;
 };

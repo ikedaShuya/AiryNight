@@ -30,6 +30,17 @@ void Player::Initialize(Model* model, Model* swordModel, Camera* camera, const V
 
 void Player::Update() {
 
+	// ゲーム開始演出中は操作・物理処理を停止する
+	if (!isControllable_) {
+		velocity_ = {};
+		isAttacking_ = false;
+
+		// ワールド変換を更新
+		WorldTransformUpdate(worldTransform_);
+		WorldTransformUpdate(swordWorldTransform_);
+		return;
+	}
+
 	if (damageCoolTime_ > 0) {
 		damageCoolTime_--;
 	}

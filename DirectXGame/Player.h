@@ -118,6 +118,9 @@ public:
 
 	bool IsDead() const { return hp_ <= 0; }
 
+	// プレイヤー操作の許可
+	void SetControllable(bool controllable) { isControllable_ = controllable; }
+
 private:
 	// ============================
 	// モデル・カメラ関連
@@ -239,4 +242,7 @@ private:
 	// ダメージ無敵時間
 	int damageCoolTime_ = 0;
 	static constexpr int kDamageCoolTime = 30;
+
+	// 操作可能か
+	bool isControllable_ = true;
 };

@@ -1,5 +1,5 @@
-#include "Fade.h"
 #include "ClearScene.h"
+#include "Fade.h"
 #include "GameOverScene.h"
 #include "GameScene.h"
 #include "KamataEngine.h"
@@ -15,6 +15,10 @@ GameOverScene* gameOverScene = nullptr;
 
 Fade fade;
 
+// シーンの表示時間（秒）
+const float kTitleDisplayTime = 1.5f;
+const float kGameDisplayTime = 2.0f;
+
 bool isChangingScene = false;
 bool sceneChanged = false;
 
@@ -29,7 +33,6 @@ enum class Scene {
 
 // 現在シーン（型）
 Scene scene = Scene::kUnknown;
-
 
 static bool IsSceneFinished() {
 	switch (scene) {
@@ -188,7 +191,6 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// フェード更新
 		fade.Update();
 
-		// シーン切り替え
 		ChangeScene();
 		// 現在シーン更新
 		UpdateScene();
