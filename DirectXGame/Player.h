@@ -236,12 +236,12 @@ private:
 	// HP・ダメージ
 	// ============================
 
-	int hp_ = 100;
-	int maxHp_ = 100;
+	int hp_ = 20;
+	int maxHp_ = 20;
 
 	// ダメージ無敵時間
 	int damageCoolTime_ = 0;
-	static constexpr int kDamageCoolTime = 30;
+	static constexpr int kDamageCoolTime = 0;
 
 	// 操作可能か
 	bool isControllable_ = true;

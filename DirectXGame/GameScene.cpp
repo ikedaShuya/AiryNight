@@ -49,27 +49,20 @@ void GameScene::Initialize() {
 	// ゲーム開始演出中は操作できないようにする
 	player_->SetControllable(false);
 
+	// 敵のモデル
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 
-	 // 敵の数
-	const int enemyCount = 5;
+	// 敵5体の配置位置を個別に指定
+	const Vector3 enemyPositions[] = {
+	    mapChipField_->GetMapChipPositionByIndex(3, 12), mapChipField_->GetMapChipPositionByIndex(25, 12), mapChipField_->GetMapChipPositionByIndex(45, 12),
+	    mapChipField_->GetMapChipPositionByIndex(70, 12), mapChipField_->GetMapChipPositionByIndex(90, 12)};
 
-	// 敵の配置する行は地面の上（y=17）
-	const int enemyY = 12;
-
-	// 敵のx座標候補リストを作成（0〜99のうち間隔を空けて5箇所）
-	// ここでは単純に均等に配置する例
-	std::vector<int> enemyXs;
-	int spacing = 100 / enemyCount;
-	for (int i = 0; i < enemyCount; ++i) {
-		enemyXs.push_back(spacing / 2 + i * spacing);
-	}
-
-	// 敵を配置
-	for (int i = 0; i < enemyCount; ++i) {
+	// 敵を生成して配置
+	for (int i = 0; i < 5; ++i) {
 		Enemy* newEnemy = new Enemy();
-		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(enemyXs[i], enemyY);
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+
+		newEnemy->Initialize(modelEnemy_, &camera_, enemyPositions[i]);
+
 		enemies_.push_back(newEnemy);
 	}
 
@@ -103,6 +96,12 @@ void GameScene::Initialize() {
 
 	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
 
+	// ゲームオーバー時の暗転用スプライト
+	gameOverFadeSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f});
+
+	gameOverFadeSprite_->SetSize({1280.0f, 720.0f});
+	gameOverFadeSprite_->SetColor({0.0f, 0.0f, 0.0f, 0.0f});
+
 	// カウントダウン画像を読み込む
 	countdown3Sprite_ = Sprite::Create(TextureManager::Load("countdown_3.png"), {640.0f, 360.0f});
 
@@ -121,10 +120,64 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
+	
+	// ゲームオーバー演出中
+	if (isGameOverPlaying_) {
+
+		gameOverTimer_++;
+
+		// カメラを30フレームかけてズームインする
+		if (gameOverTimer_ <= kGameOverZoomFrame) {
+			float t = static_cast<float>(gameOverTimer_) / static_cast<float>(kGameOverZoomFrame);
+
+			// 最初はゆっくり、徐々にズームする
+			float ease = t * t;
+
+			// 画角を元の65%まで狭くする
+			camera_.fovAngleY = gameOverStartFovY_ * (1.0f - 0.35f * ease);
+		}
+
+		// カメラの行列を更新する
+		camera_.UpdateMatrix();
+
+		// 最初の10フレームは赤い衝撃演出
+		if (gameOverTimer_ <= kGameOverFlashFrame) {
+
+			float alpha = 0.55f * (1.0f - static_cast<float>(gameOverTimer_ - 1) / static_cast<float>(kGameOverFlashFrame));
+
+			gameOverFadeSprite_->SetColor({1.0f, 0.0f, 0.0f, alpha});
+
+		} else {
+
+			// 赤い演出の後、黒くゆっくり暗転する
+			float alpha = static_cast<float>(gameOverTimer_ - kGameOverFlashFrame) / static_cast<float>(kGameOverFrame - kGameOverFlashFrame);
+
+			if (alpha > 1.0f) {
+				alpha = 1.0f;
+			}
+
+			gameOverFadeSprite_->SetColor({0.0f, 0.0f, 0.0f, alpha});
+		}
+
+		// 暗転が完了したらゲームオーバーシーンへ
+		if (gameOverTimer_ >= kGameOverFrame) {
+			result_ = GameResult::GameOver;
+			finished_ = true;
+		}
+
+		return;
+	}
+
 	// プレイヤー死亡判定
 	if (player_->GetHp() <= 0) {
-		result_ = GameResult::GameOver;
-		finished_ = true;
+
+		isGameOverPlaying_ = true;
+		gameOverStartFovY_ = camera_.fovAngleY;
+		gameOverTimer_ = 0;
+
+		// プレイヤーの操作を禁止
+		player_->SetControllable(false);
+
 		return;
 	}
 
@@ -255,6 +308,11 @@ void GameScene::Draw() {
 		countdownGoSprite_->Draw();
 	}
 
+	// ゲームオーバー時の暗転
+	if (isGameOverPlaying_) {
+		gameOverFadeSprite_->Draw();
+	}
+
 	// スプライト描画後処理
 	Sprite::PostDraw();
 }
@@ -294,6 +352,7 @@ GameScene::~GameScene() {
 	delete countdown2Sprite_;
 	delete countdown1Sprite_;
 	delete countdownGoSprite_;
+	delete gameOverFadeSprite_;
 }
 
 void GameScene::GenerateBlocks() {

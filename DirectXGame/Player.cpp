@@ -143,7 +143,7 @@ AABB Player::GetAABB() const {
 void Player::OnCollision(const Enemy* enemy) {
 	(void)enemy;
 	// ダメージ
-	TakeDamage(25);
+	TakeDamage(20);
 }
 
 void Player::InputHorizontal() {

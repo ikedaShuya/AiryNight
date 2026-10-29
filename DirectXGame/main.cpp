@@ -96,13 +96,15 @@ static void ChangeSceneNow() {
 		break;
 
 	case Scene::kGameOver:
-		scene = Scene::kTitle;
-
+		// ゲームオーバー画面を削除
 		delete gameOverScene;
 		gameOverScene = nullptr;
 
-		titleScene = new TitleScene;
-		titleScene->Initialize();
+		// ゲームシーンを最初から作り直す
+		scene = Scene::kGame;
+
+		gameScene = new GameScene;
+		gameScene->Initialize();
 		break;
 
 	default:

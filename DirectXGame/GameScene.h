@@ -80,11 +80,26 @@ private:
 	// 3Dモデル
 	KamataEngine::Model* modelSkyDome_ = nullptr;
 
-	GameResult result_ = GameResult::None;	
+	GameResult result_ = GameResult::None;
+
+	// ゲームオーバー演出
+	bool isGameOverPlaying_ = false;
+	int gameOverTimer_ = 0;
+	static constexpr int kGameOverFrame = 90;
+
+	static constexpr int kGameOverFlashFrame = 10;
+
+	// ゲームオーバー開始時のカメラ画角
+	float gameOverStartFovY_ = 0.0f;
+
+	// カメラズームにかける時間
+	static constexpr int kGameOverZoomFrame = 30;
+
+	// 画面を暗くするスプライト
+	KamataEngine::Sprite* gameOverFadeSprite_ = nullptr;
 
 	KamataEngine::Sprite* aSprite_ = nullptr;
 
-	
 	// ゲーム開始演出
 	int startTimer_ = 0;
 

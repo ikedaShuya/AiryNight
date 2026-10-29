@@ -39,4 +39,10 @@ private:
 
 	// 3Dモデル
 	KamataEngine::Model* modelSkyDome_ = nullptr;
+
+	// ゲームオーバー画面の文字
+	KamataEngine::Sprite* retrySprite_ = nullptr;
+	KamataEngine::Sprite* hintSprite_ = nullptr;
+
+	float titleAnimationTimer_ = 0.0f;
 };
