@@ -99,9 +99,6 @@ public:
 	// 攻撃判定AABBを取得
 	AABB GetAttackAABB() const;
 
-	// 攻撃中か
-	bool IsAttacking() { return isAttacking_; }
-
 	LRDirection GetLRDirection() const { return lrDirection_; }
 
 	AABB GetSwordAABB() const;
@@ -120,6 +117,17 @@ public:
 
 	// プレイヤー操作の許可
 	void SetControllable(bool controllable) { isControllable_ = controllable; }
+
+	// プレイヤーの位置を変更
+	void SetPosition(const KamataEngine::Vector3& position) {
+		worldTransform_.translation_ = position;
+		velocity_ = {};
+		onGround_ = false;
+		jumpCount_ = 0;
+		jumpBufferTimer_ = 0;
+		isAttacking_ = false;
+		attackTimer_ = 0;
+	}
 
 private:
 	// ============================
@@ -241,7 +249,7 @@ private:
 
 	// ダメージ無敵時間
 	int damageCoolTime_ = 0;
-	static constexpr int kDamageCoolTime = 0;
+	static constexpr int kDamageCoolTime = 60;
 
 	// 操作可能か
 	bool isControllable_ = true;

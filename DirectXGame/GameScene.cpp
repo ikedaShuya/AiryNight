@@ -1,9 +1,16 @@
 #include "GameScene.h"
 #include "Math.h"
+#include <fstream>
+
+#ifdef USE_IMGUI
+#include <imgui.h>
+#endif
 
 using namespace KamataEngine;
 
-void GameScene::Initialize() {
+void GameScene::Initialize(int stageNumber) {
+
+	stageNumber_ = stageNumber;
 
 	// カメラの初期化
 	camera_.Initialize();
@@ -12,11 +19,20 @@ void GameScene::Initialize() {
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 
 	mapChipField_ = new MapChipField;
-	mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
 
-	
+	if (stageNumber_ == 1) {
+		mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
+	} else if (stageNumber_ == 2) {
+		mapChipField_->LoadMapChipCsv("Resources/blocks2.csv");
+	} else {
+		mapChipField_->LoadMapChipCsv("Resources/blocks3.csv");
+	}
+
+	// ゴールの旗の配置を読み込む
+	LoadFlagPositionForStage();
+
 	// ゴールの位置を設定する
-	goalPosition_ = mapChipField_->GetMapChipPositionByIndex(97, 12);
+	goalPosition_ = mapChipField_->GetMapChipPositionByIndex(flagMapX_, flagMapY_);
 
 	// ゴールの棒を初期化する
 	worldTransformGoalPole_.Initialize();
@@ -41,7 +57,10 @@ void GameScene::Initialize() {
 
 	// 自キャラの生成
 	player_ = new Player();
-	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(1, 12);
+	// プレイヤーの配置を読み込む
+	LoadPlayerPositionForStage();
+
+	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(playerMapX_, playerMapY_);
 	// 自キャラの初期化
 	player_->Initialize(modelPlayer_, swordModel_, &camera_, playerPosition);
 
@@ -52,19 +71,11 @@ void GameScene::Initialize() {
 	// 敵のモデル
 	modelEnemy_ = Model::CreateFromOBJ("enemy", true);
 
-	// 敵5体の配置位置を個別に指定
-	const Vector3 enemyPositions[] = {
-	    mapChipField_->GetMapChipPositionByIndex(3, 12), mapChipField_->GetMapChipPositionByIndex(25, 12), mapChipField_->GetMapChipPositionByIndex(45, 12),
-	    mapChipField_->GetMapChipPositionByIndex(70, 12), mapChipField_->GetMapChipPositionByIndex(90, 12)};
+	// ステージごとの敵配置を設定
+	SetEnemyPositionsForStage();
 
-	// 敵を生成して配置
-	for (int i = 0; i < 5; ++i) {
-		Enemy* newEnemy = new Enemy();
-
-		newEnemy->Initialize(modelEnemy_, &camera_, enemyPositions[i]);
-
-		enemies_.push_back(newEnemy);
-	}
+	// 敵を生成
+	GenerateEnemies();
 
 	// カメラコントローラの初期化
 	CController_ = new CameraController();
@@ -91,7 +102,7 @@ void GameScene::Initialize() {
 	hpBarFg_->SetAnchorPoint({0.0f, 0.0f});
 
 	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
-	skyDome_ = new SkyDome();                    
+	skyDome_ = new SkyDome();
 	skyDome_->Initialize(modelSkyDome_, &camera_);
 
 	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
@@ -120,7 +131,474 @@ void GameScene::Initialize() {
 
 void GameScene::Update() {
 
-	
+// マップチップ編集画面
+#ifdef USE_IMGUI
+
+	ImGui::Begin("Map Editor");
+
+	// 編集モードの切り替え
+	if (ImGui::Checkbox("Edit Mode", &isMapEditing_)) {
+		// モード切り替え時の処理
+	}
+
+	// ステージ切り替え
+	const char* stages[] = {"Stage 1", "Stage 2", "Stage 3"};
+
+	int selectedStage = stageNumber_ - 1;
+
+	if (ImGui::Combo("Stage", &selectedStage, stages, 3)) {
+
+		stageNumber_ = selectedStage + 1;
+
+		if (stageNumber_ == 1) {
+			mapChipField_->LoadMapChipCsv("Resources/blocks.csv");
+		} else if (stageNumber_ == 2) {
+			mapChipField_->LoadMapChipCsv("Resources/blocks2.csv");
+		} else {
+			mapChipField_->LoadMapChipCsv("Resources/blocks3.csv");
+		}
+
+		// ブロックを作り直す
+		GenerateBlocks();
+
+		// ゴールの旗の配置を読み込む
+		LoadFlagPositionForStage();
+
+		// ゴール位置を更新する
+		goalPosition_ = mapChipField_->GetMapChipPositionByIndex(flagMapX_, flagMapY_);
+
+		// ゴールの棒の位置を更新する
+		worldTransformGoalPole_.translation_ = {goalPosition_.x, goalPosition_.y + 1.0f, goalPosition_.z};
+
+		// ゴールの旗の位置を更新する
+		worldTransformGoalFlag_.translation_ = {goalPosition_.x + 0.4f, goalPosition_.y + 2.8f, goalPosition_.z};
+
+		WorldTransformUpdate(worldTransformGoalPole_);
+		WorldTransformUpdate(worldTransformGoalFlag_);
+
+		// 敵の配置を更新
+		SetEnemyPositionsForStage();
+
+		// 敵を作り直す
+		GenerateEnemies();
+
+		// プレイヤーの配置を読み込む
+		LoadPlayerPositionForStage();
+
+		Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(playerMapX_, playerMapY_);
+
+		player_->SetPosition(playerPosition);
+
+		// カメラの位置を更新
+		CController_->Reset();
+	}
+
+	// 編集モードの切り替え
+	ImGui::Text("Editor Mode");
+
+	ImGui::RadioButton("Map Mode", &editorMode_, 0);
+	ImGui::SameLine();
+	ImGui::RadioButton("Enemy Mode", &editorMode_, 1);
+	ImGui::SameLine();
+	ImGui::RadioButton("Player Mode", &editorMode_, 2);
+	ImGui::SameLine();
+	ImGui::RadioButton("Flag Mode", &editorMode_, 3);
+
+	ImGui::Separator();
+
+	// マップ編集モードのときだけチップ選択を表示
+	if (editorMode_ == 0) {
+		ImGui::Text("Tool");
+
+		ImGui::RadioButton("Empty", &editMapType_, 0);
+		ImGui::SameLine();
+		ImGui::RadioButton("Block", &editMapType_, 1);
+	}
+
+	ImGui::Separator();
+
+	// 範囲選択モード
+	ImGui::Checkbox("Range Select", &isRangeSelectMode_);
+
+	ImGui::Text("Drag to select an area and apply the selected tool");
+
+	ImGui::Separator();
+
+	// マップの拡大・縮小
+	ImGui::Text("Map Zoom");
+
+	ImGui::SliderFloat("Cell Size", &mapCellSize_, 4.0f, 16.0f, "%.1f");
+
+	ImGui::Separator();
+
+	// マップ表示エリア
+	float cellSize = mapCellSize_;
+
+	float mapWidth = mapChipField_->GetNumBlockHorizontal() * cellSize;
+	float mapHeight = mapChipField_->GetNumBlockVertical() * cellSize;
+
+	ImGui::BeginChild("MapCanvasArea", ImVec2(0, 190), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+	// マップの左上座標
+	ImVec2 mapStart = ImGui::GetCursorScreenPos();
+
+	// マップ全体のクリック判定
+	ImGui::InvisibleButton("MapCanvas", ImVec2(mapWidth, mapHeight));
+
+	bool isHovered = ImGui::IsItemHovered();
+
+	// マウス位置からマス目を計算
+	ImVec2 mousePosition = ImGui::GetIO().MousePos;
+
+	int mouseX = static_cast<int>((mousePosition.x - mapStart.x) / cellSize);
+	int mouseY = static_cast<int>((mousePosition.y - mapStart.y) / cellSize);
+
+	// マップの範囲内に収める
+	if (mouseX < 0) {
+		mouseX = 0;
+	}
+	if (mouseX >= static_cast<int>(mapChipField_->GetNumBlockHorizontal())) {
+		mouseX = static_cast<int>(mapChipField_->GetNumBlockHorizontal()) - 1;
+	}
+	if (mouseY < 0) {
+		mouseY = 0;
+	}
+	if (mouseY >= static_cast<int>(mapChipField_->GetNumBlockVertical())) {
+		mouseY = static_cast<int>(mapChipField_->GetNumBlockVertical()) - 1;
+	}
+
+	// 敵配置モード
+	if (editorMode_ == 1) {
+
+		// 左クリックで敵を配置
+		if (isHovered && ImGui::IsMouseClicked(0)) {
+
+			bool alreadyExists = false;
+
+			for (const EnemyMapPosition& position : enemyMapPositions_) {
+				if (position.x == mouseX && position.y == mouseY) {
+					alreadyExists = true;
+					break;
+				}
+			}
+
+			if (!alreadyExists) {
+				enemyMapPositions_.push_back({mouseX, mouseY});
+				GenerateEnemies();
+			}
+		}
+
+		// 右クリックで敵を削除
+		if (isHovered && ImGui::IsMouseClicked(1)) {
+
+			for (auto it = enemyMapPositions_.begin(); it != enemyMapPositions_.end(); ++it) {
+				if (it->x == mouseX && it->y == mouseY) {
+					enemyMapPositions_.erase(it);
+					break;
+				}
+			}
+
+			GenerateEnemies();
+		}
+	}
+
+	// プレイヤー配置モード
+	if (editorMode_ == 2) {
+
+		// 左クリックでプレイヤーを配置
+		if (isHovered && ImGui::IsMouseClicked(0)) {
+
+			playerMapX_ = mouseX;
+			playerMapY_ = mouseY;
+
+			Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(playerMapX_, playerMapY_);
+
+			player_->SetPosition(playerPosition);
+
+			// カメラの位置を更新
+			CController_->Reset();
+		}
+	}
+
+	// 旗配置モード
+	if (editorMode_ == 3) {
+
+		// 左クリックで旗を配置
+		if (isHovered && ImGui::IsMouseClicked(0)) {
+
+			flagMapX_ = mouseX;
+			flagMapY_ = mouseY;
+
+			goalPosition_ = mapChipField_->GetMapChipPositionByIndex(flagMapX_, flagMapY_);
+
+			// ゴールの棒の位置を更新
+			worldTransformGoalPole_.translation_ = {goalPosition_.x, goalPosition_.y + 1.0f, goalPosition_.z};
+
+			// ゴールの旗の位置を更新
+			worldTransformGoalFlag_.translation_ = {goalPosition_.x + 0.4f, goalPosition_.y + 2.8f, goalPosition_.z};
+
+			WorldTransformUpdate(worldTransformGoalPole_);
+			WorldTransformUpdate(worldTransformGoalFlag_);
+		}
+	}
+
+	// 範囲選択モード
+	// マップ編集モード
+	if (editorMode_ == 0) {
+
+		// 範囲選択モード
+		if (isRangeSelectMode_) {
+
+			// マウスを押した瞬間に開始位置を記録
+			if (isHovered && ImGui::IsMouseClicked(0)) {
+				isSelectingMapRange_ = true;
+
+				rangeStartX_ = mouseX;
+				rangeStartY_ = mouseY;
+
+				rangeEndX_ = mouseX;
+				rangeEndY_ = mouseY;
+			}
+
+			// ドラッグ中は終了位置を更新
+			if (isSelectingMapRange_ && ImGui::IsMouseDown(0)) {
+				rangeEndX_ = mouseX;
+				rangeEndY_ = mouseY;
+			}
+
+			// マウスを離したら範囲内をまとめて変更
+			if (isSelectingMapRange_ && ImGui::IsMouseReleased(0)) {
+
+				rangeEndX_ = mouseX;
+				rangeEndY_ = mouseY;
+
+				int minX = rangeStartX_;
+				int maxX = rangeEndX_;
+				int minY = rangeStartY_;
+				int maxY = rangeEndY_;
+
+				if (minX > maxX) {
+					int temp = minX;
+					minX = maxX;
+					maxX = temp;
+				}
+
+				if (minY > maxY) {
+					int temp = minY;
+					minY = maxY;
+					maxY = temp;
+				}
+
+				MapChipType type = MapChipType::kBlank;
+
+				if (editMapType_ == 1) {
+					type = MapChipType::kBlock;
+				}
+
+				for (int y = minY; y <= maxY; y++) {
+					for (int x = minX; x <= maxX; x++) {
+						mapChipField_->SetMapChipTypeByIndex(x, y, type);
+					}
+				}
+
+				GenerateBlocks();
+
+				isSelectingMapRange_ = false;
+			}
+
+		} else {
+
+			// 通常モード：クリック・ドラッグで編集
+			if (isHovered && ImGui::IsMouseDown(0)) {
+
+				MapChipType type = MapChipType::kBlank;
+
+				if (editMapType_ == 1) {
+					type = MapChipType::kBlock;
+				}
+
+				if (mapChipField_->GetMapChipTypeByIndex(mouseX, mouseY) != type) {
+
+					mapChipField_->SetMapChipTypeByIndex(mouseX, mouseY, type);
+
+					GenerateBlocks();
+				}
+			}
+		}
+	}
+
+	// マップを描画
+	ImDrawList* drawList = ImGui::GetWindowDrawList();
+
+	for (uint32_t y = 0; y < mapChipField_->GetNumBlockVertical(); y++) {
+
+		for (uint32_t x = 0; x < mapChipField_->GetNumBlockHorizontal(); x++) {
+
+			ImVec2 p1 = {mapStart.x + x * cellSize, mapStart.y + y * cellSize};
+
+			ImVec2 p2 = {p1.x + cellSize, p1.y + cellSize};
+
+			ImU32 color;
+
+			if (mapChipField_->GetMapChipTypeByIndex(x, y) == MapChipType::kBlock) {
+				color = IM_COL32(90, 130, 190, 255);
+			} else {
+				color = IM_COL32(45, 55, 65, 255);
+			}
+
+			drawList->AddRectFilled(p1, p2, color);
+
+			drawList->AddRect(p1, p2, IM_COL32(100, 110, 120, 255));
+		}
+	}
+
+	// 敵の配置位置を描画
+	for (const EnemyMapPosition& position : enemyMapPositions_) {
+
+		ImVec2 center = {mapStart.x + (position.x + 0.5f) * cellSize, mapStart.y + (position.y + 0.5f) * cellSize};
+
+		drawList->AddCircleFilled(center, cellSize * 0.4f, IM_COL32(255, 70, 70, 255));
+	}
+
+	// プレイヤーの配置位置を描画
+	ImVec2 playerCenter = {mapStart.x + (playerMapX_ + 0.5f) * cellSize, mapStart.y + (playerMapY_ + 0.5f) * cellSize};
+
+	drawList->AddCircleFilled(playerCenter, cellSize * 0.45f, IM_COL32(50, 150, 255, 255));
+
+	// ゴールの旗の配置位置を描画
+	ImVec2 flagCenter = {mapStart.x + (flagMapX_ + 0.5f) * cellSize, mapStart.y + (flagMapY_ + 0.5f) * cellSize};
+
+	drawList->AddCircleFilled(flagCenter, cellSize * 0.45f, IM_COL32(255, 220, 0, 255));
+
+	// 範囲選択中の枠を描画
+	if (isSelectingMapRange_) {
+
+		int minX = rangeStartX_;
+		int maxX = rangeEndX_;
+		int minY = rangeStartY_;
+		int maxY = rangeEndY_;
+
+		if (minX > maxX) {
+			int temp = minX;
+			minX = maxX;
+			maxX = temp;
+		}
+
+		if (minY > maxY) {
+			int temp = minY;
+			minY = maxY;
+			maxY = temp;
+		}
+
+		ImVec2 p1 = {mapStart.x + minX * cellSize, mapStart.y + minY * cellSize};
+
+		ImVec2 p2 = {mapStart.x + (maxX + 1) * cellSize, mapStart.y + (maxY + 1) * cellSize};
+
+		drawList->AddRect(p1, p2, IM_COL32(255, 220, 0, 255), 0.0f, 0, 3.0f);
+	}
+
+	ImGui::EndChild();
+
+	// 保存完了メッセージの表示時間を減らす
+	if (saveMessageTimer_ > 0) {
+		saveMessageTimer_--;
+	}
+
+	// 保存ボタン
+
+	if (ImGui::Button("Save")) {
+
+		// マップを保存
+		if (stageNumber_ == 1) {
+			mapChipField_->SaveMapChipCsv("Resources/blocks.csv");
+		} else if (stageNumber_ == 2) {
+			mapChipField_->SaveMapChipCsv("Resources/blocks2.csv");
+		} else {
+			mapChipField_->SaveMapChipCsv("Resources/blocks3.csv");
+		}
+
+		// 敵の配置ファイル
+		std::string filePath;
+
+		if (stageNumber_ == 1) {
+			filePath = "Resources/enemies1.csv";
+		} else if (stageNumber_ == 2) {
+			filePath = "Resources/enemies2.csv";
+		} else {
+			filePath = "Resources/enemies3.csv";
+		}
+
+		// 敵の配置を保存
+		std::ofstream file(filePath);
+
+		if (file.is_open()) {
+			for (const EnemyMapPosition& position : enemyMapPositions_) {
+				file << position.x << "," << position.y << "\n";
+			}
+
+			file.close();
+			saveMessageTimer_ = 120;
+		}
+
+		// プレイヤーの配置ファイル
+		std::string playerFilePath;
+
+		if (stageNumber_ == 1) {
+			playerFilePath = "Resources/player1.csv";
+		} else if (stageNumber_ == 2) {
+			playerFilePath = "Resources/player2.csv";
+		} else {
+			playerFilePath = "Resources/player3.csv";
+		}
+
+		// プレイヤーの配置を保存
+		std::ofstream playerFile(playerFilePath);
+
+		if (playerFile.is_open()) {
+			playerFile << playerMapX_ << "," << playerMapY_ << "\n";
+			playerFile.close();
+
+			saveMessageTimer_ = 120;
+		}
+
+		// 旗の配置ファイル
+		std::string flagFilePath;
+
+		if (stageNumber_ == 1) {
+			flagFilePath = "Resources/flag1.csv";
+		} else if (stageNumber_ == 2) {
+			flagFilePath = "Resources/flag2.csv";
+		} else {
+			flagFilePath = "Resources/flag3.csv";
+		}
+
+		// 旗の配置を保存
+		std::ofstream flagFile(flagFilePath);
+
+		if (flagFile.is_open()) {
+			flagFile << flagMapX_ << "," << flagMapY_ << "\n";
+			flagFile.close();
+
+			saveMessageTimer_ = 120;
+		}
+	}
+
+
+	// 保存完了メッセージ
+	if (saveMessageTimer_ > 0) {
+		ImGui::SameLine();
+		ImGui::TextColored(ImVec4(0.2f, 1.0f, 0.3f, 1.0f), "Saved!");
+	}
+
+#endif
+
+	// マップ編集中はゲームの進行を停止する
+#ifdef USE_IMGUI
+	if (isMapEditing_) {
+		return;
+	}
+#endif
+
 	// ゲームオーバー演出中
 	if (isGameOverPlaying_) {
 
@@ -293,8 +771,8 @@ void GameScene::Draw() {
 	Sprite::PreDraw();
 
 	// HPバー描画
-	hpBarFg_->Draw();
 	hpBarBg_->Draw();
+	hpBarFg_->Draw();
 	aSprite_->Draw();
 
 	// カウントダウン表示
@@ -319,11 +797,22 @@ void GameScene::Draw() {
 
 GameScene::~GameScene() {
 
+	// カメラコントローラの解放
+	delete CController_;
+
+	// 自キャラの解放
+	delete player_;
+
+	// 敵の解放
+	for (Enemy* enemy : enemies_) {
+		delete enemy;
+	}
+	enemies_.clear();
+
 	// マップチップフィールドの解放
 	delete mapChipField_;
 
-	delete modelBlock_;
-
+	// ブロックのワールド変換を解放
 	for (std::vector<WorldTransform*>& worldTransformBlockLine : worldTransformBlocks_) {
 		for (WorldTransform* worldTransformBlock : worldTransformBlockLine) {
 			delete worldTransformBlock;
@@ -332,22 +821,21 @@ GameScene::~GameScene() {
 	worldTransformBlocks_.clear();
 
 	// モデルデータの解放
+	delete swordModel_;
 	delete modelPlayer_;
-
-	// 自キャラの解放
-	delete player_;
-
 	delete modelEnemy_;
+	delete modelBlock_;
 
-	for (Enemy* enemy_ : enemies_) {
-		delete enemy_;
-	}
-
+	// HPバーの解放
 	delete hpBarBg_;
 	delete hpBarFg_;
 
+	// スカイドームの解放
 	delete skyDome_;
 	delete modelSkyDome_;
+
+	// スプライトの解放
+	delete aSprite_;
 	delete countdown3Sprite_;
 	delete countdown2Sprite_;
 	delete countdown1Sprite_;
@@ -356,6 +844,15 @@ GameScene::~GameScene() {
 }
 
 void GameScene::GenerateBlocks() {
+
+	// 既存のブロックを削除
+	for (std::vector<WorldTransform*>& line : worldTransformBlocks_) {
+		for (WorldTransform* block : line) {
+			delete block;
+		}
+	}
+
+	worldTransformBlocks_.clear();
 
 	// 要素数
 	uint32_t numBlockVertical = mapChipField_->GetNumBlockVertical();
@@ -384,47 +881,186 @@ void GameScene::GenerateBlocks() {
 	}
 }
 
-void GameScene::CheckAllCollisions(){
+void GameScene::GenerateEnemies() {
 
-#pragma region 自キャラと敵キャラの当たり判定
-    {// 判定対象1と2の座標
-     AABB aabb1, aabb2;
+	// 既存の敵を削除
+	for (Enemy* enemy : enemies_) {
+		delete enemy;
+	}
+	enemies_.clear();
 
-// 自キャラの座標
-aabb1 = player_->GetAABB();
+	// 配置データから敵を生成
+	for (const EnemyMapPosition& position : enemyMapPositions_) {
 
-// 自キャラと敵弾全ての当たり判定
-for (Enemy* enemy_ : enemies_) {
-	// 敵弾の座標
-	aabb2 = enemy_->GetAABB();
+		Vector3 enemyPosition = mapChipField_->GetMapChipPositionByIndex(position.x, position.y);
 
-	// AABB同士の交差判定
-	if (IsCollision(aabb1, aabb2)) {
-		// 自キャラの衝突時関数を呼び出す
-		player_->OnCollision(enemy_);
-		// 敵の衝突時関数を呼び出す
-		enemy_->OnCollision(player_);
+		Enemy* enemy = new Enemy;
+
+		enemy->Initialize(modelEnemy_, &camera_, enemyPosition);
+		enemy->SetMapChipField(mapChipField_);
+
+		enemies_.push_back(enemy);
 	}
 }
-}
+
+void GameScene::CheckAllCollisions() {
+
+#pragma region 自キャラと敵キャラの当たり判定
+	{ // 判定対象1と2の座標
+		AABB aabb1, aabb2;
+
+		// 自キャラの座標
+		aabb1 = player_->GetAABB();
+
+		// 自キャラと敵弾全ての当たり判定
+		for (Enemy* enemy_ : enemies_) {
+			// 敵弾の座標
+			aabb2 = enemy_->GetAABB();
+
+			// AABB同士の交差判定
+			if (IsCollision(aabb1, aabb2)) {
+				// 自キャラの衝突時関数を呼び出す
+				player_->OnCollision(enemy_);
+				// 敵の衝突時関数を呼び出す
+				enemy_->OnCollision(player_);
+			}
+		}
+	}
 #pragma endregion
 
 #pragma region 近接攻撃と敵キャラの当たり判定（攻撃）
-{
-	// 攻撃中のみ判定する
-	if (!player_->IsAttacking()) {
-		return;
-	}
+	{
+		// 攻撃中のみ判定する
+		if (!player_->IsAttacking()) {
+			return;
+		}
 
-	AABB attackAABB = player_->GetSwordAABB();
+		AABB attackAABB = player_->GetSwordAABB();
 
-	for (Enemy* enemy_ : enemies_) {
-		AABB enemyAABB = enemy_->GetAABB();
+		for (Enemy* enemy_ : enemies_) {
+			AABB enemyAABB = enemy_->GetAABB();
 
-		if (IsCollision(attackAABB, enemyAABB)) {
-			enemy_->OnHit(player_); // ダメージ処理
+			if (IsCollision(attackAABB, enemyAABB)) {
+				enemy_->OnHit(player_); // ダメージ処理
+			}
 		}
 	}
-}
 #pragma endregion
+}
+
+void GameScene::LoadPlayerPositionForStage() {
+
+	// 初期位置
+	playerMapX_ = 1;
+	playerMapY_ = 12;
+
+	// ステージごとの配置ファイル
+	std::string filePath;
+
+	if (stageNumber_ == 1) {
+		filePath = "Resources/player1.csv";
+	} else if (stageNumber_ == 2) {
+		filePath = "Resources/player2.csv";
+	} else {
+		filePath = "Resources/player3.csv";
+	}
+
+	// 保存ファイルがあれば読み込む
+	std::ifstream file(filePath);
+
+	if (file.is_open()) {
+		char comma;
+		file >> playerMapX_ >> comma >> playerMapY_;
+	}
+}
+
+void GameScene::SetEnemyPositionsForStage() {
+
+	enemyMapPositions_.clear();
+
+	if (stageNumber_ == 1) {
+
+		enemyMapPositions_.push_back({6, 12});
+		enemyMapPositions_.push_back({20, 12});
+		enemyMapPositions_.push_back({40, 12});
+		enemyMapPositions_.push_back({65, 12});
+		enemyMapPositions_.push_back({88, 12});
+
+	} else if (stageNumber_ == 2) {
+
+		enemyMapPositions_.push_back({5, 12});
+		enemyMapPositions_.push_back({18, 12});
+		enemyMapPositions_.push_back({30, 12});
+		enemyMapPositions_.push_back({42, 12});
+		enemyMapPositions_.push_back({55, 12});
+		enemyMapPositions_.push_back({72, 12});
+		enemyMapPositions_.push_back({88, 12});
+
+	} else if (stageNumber_ == 3) {
+
+		enemyMapPositions_.push_back({5, 12});
+		enemyMapPositions_.push_back({15, 12});
+		enemyMapPositions_.push_back({25, 12});
+		enemyMapPositions_.push_back({35, 12});
+		enemyMapPositions_.push_back({45, 12});
+		enemyMapPositions_.push_back({55, 12});
+		enemyMapPositions_.push_back({65, 12});
+		enemyMapPositions_.push_back({78, 12});
+		enemyMapPositions_.push_back({90, 12});
+	}
+
+	
+    // ステージごとの敵配置ファイル
+	std::string filePath;
+
+	if (stageNumber_ == 1) {
+		filePath = "Resources/enemies1.csv";
+	} else if (stageNumber_ == 2) {
+		filePath = "Resources/enemies2.csv";
+	} else {
+		filePath = "Resources/enemies3.csv";
+	}
+
+	// 保存ファイルがあれば、そちらの配置を読み込む
+	std::ifstream file(filePath);
+
+	if (file.is_open()) {
+		enemyMapPositions_.clear();
+
+		int x;
+		int y;
+		char comma;
+
+		while (file >> x >> comma >> y) {
+			if (comma == ',') {
+				enemyMapPositions_.push_back({x, y});
+			}
+		}	
+	}
+}
+
+void GameScene::LoadFlagPositionForStage() {
+
+	// 初期位置
+	flagMapX_ = 97;
+	flagMapY_ = 12;
+
+	// ステージごとの配置ファイル
+	std::string filePath;
+
+	if (stageNumber_ == 1) {
+		filePath = "Resources/flag1.csv";
+	} else if (stageNumber_ == 2) {
+		filePath = "Resources/flag2.csv";
+	} else {
+		filePath = "Resources/flag3.csv";
+	}
+
+	// 保存ファイルがあれば読み込む
+	std::ifstream file(filePath);
+
+	if (file.is_open()) {
+		char comma;
+		file >> flagMapX_ >> comma >> flagMapY_;
+	}
 }

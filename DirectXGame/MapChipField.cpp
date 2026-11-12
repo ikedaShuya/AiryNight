@@ -63,10 +63,11 @@ void MapChipField::LoadMapChipCsv(const std::string& filePath) {
 
 MapChipType MapChipField::GetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex) {
 
-	if (xIndex < 0 || kNumBlockHorizontal - 1 < xIndex) {
+	if (xIndex >= kNumBlockHorizontal) {
 		return MapChipType::kBlank;
 	}
-	if (yIndex < 0 || kNumBlockVertical - 1 < yIndex) {
+
+	if (yIndex >= kNumBlockVertical) {
 		return MapChipType::kBlank;
 	}
 
@@ -79,7 +80,7 @@ MapChipField::IndexSet MapChipField::GetMapChipIndexSetByPosition(const Vector3&
 
 	IndexSet indexSet = {};
 	indexSet.xIndex = static_cast<uint32_t>((position.x + kBlockWidth / 2.0f) / kBlockWidth);
-	indexSet.yIndex = kNumBlockVertical - 1 - static_cast<uint32_t>(position.y + kBlockHeight / 2.0f / kBlockHeight);
+	indexSet.yIndex = kNumBlockVertical - 1 - static_cast<uint32_t>((position.y + kBlockHeight / 2.0f) / kBlockHeight);
 	return indexSet;
 }
 
@@ -95,4 +96,45 @@ MapChipField::Rect MapChipField::GetRectByIndex(uint32_t xIndex, uint32_t yIndex
 	rect.top = center.y + kBlockWidth / 2.0f;
 
 	return rect;
+}
+
+// 指定したマスのマップチップを変更する
+void MapChipField::SetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex, MapChipType type) {
+
+	// 範囲外なら変更しない
+	if (xIndex >= kNumBlockHorizontal || yIndex >= kNumBlockVertical) {
+		return;
+	}
+
+	mapChipData_.data[yIndex][xIndex] = type;
+}
+
+// マップチップデータをCSVに保存する
+void MapChipField::SaveMapChipCsv(const std::string& filePath) {
+
+	std::ofstream file(filePath);
+
+	if (!file.is_open()) {
+		return;
+	}
+
+	for (uint32_t y = 0; y < kNumBlockVertical; ++y) {
+
+		for (uint32_t x = 0; x < kNumBlockHorizontal; ++x) {
+
+			if (mapChipData_.data[y][x] == MapChipType::kBlock) {
+				file << "1";
+			} else {
+				file << "0";
+			}
+
+			if (x < kNumBlockHorizontal - 1) {
+				file << ",";
+			}
+		}
+
+		file << "\n";
+	}
+
+	file.close();
 }

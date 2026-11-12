@@ -15,7 +15,7 @@ enum class GameResult { None, Clear, GameOver };
 class GameScene {
 public:
 	// 初期化
-	void Initialize();
+	void Initialize(int stageNumber = 1);
 
 	// 更新
 	void Update();
@@ -32,12 +32,62 @@ public:
 
 	void GenerateBlocks();
 
+	// 敵を配置データから生成する
+	void GenerateEnemies();
+
+	// ステージごとの敵配置を設定する
+	void SetEnemyPositionsForStage();
+
 	// 全ての当たり判定を行う
 	void CheckAllCollisions();
 
 private:
 	// 終了フラグ
 	bool finished_ = false;
+
+#ifdef USE_IMGUI
+
+	// マップエディタで配置するチップ
+	int editMapType_ = 1; // 初期状態はブロック
+
+	// エディタの編集モード
+	int editorMode_ = 0; // 0: マップ編集、1: 敵配置、2: プレイヤー配置
+
+	// マップ編集中かどうか
+	bool isMapEditing_ = true;
+
+	// マップエディタの拡大・縮小
+	float mapCellSize_ = 8.0f;
+
+	// 保存完了メッセージ
+	int saveMessageTimer_ = 0;
+
+	// 範囲選択モード
+	bool isRangeSelectMode_ = false;
+	bool isSelectingMapRange_ = false;
+
+	// 範囲選択の開始位置と終了位置
+	int rangeStartX_ = 0;
+	int rangeStartY_ = 0;
+	int rangeEndX_ = 0;
+	int rangeEndY_ = 0;
+
+#endif
+
+	// 敵の配置位置
+	struct EnemyMapPosition {
+		int x;
+		int y;
+	};
+
+	std::vector<EnemyMapPosition> enemyMapPositions_;
+
+	// プレイヤーの配置位置
+	int playerMapX_ = 1;
+	int playerMapY_ = 12;
+
+	// ステージごとのプレイヤー配置を読み込む
+	void LoadPlayerPositionForStage();
 
 	// カメラ
 	KamataEngine::Camera camera_;
@@ -80,6 +130,9 @@ private:
 	// 3Dモデル
 	KamataEngine::Model* modelSkyDome_ = nullptr;
 
+	// 現在のステージ番号
+	int stageNumber_ = 1;
+
 	GameResult result_ = GameResult::None;
 
 	// ゲームオーバー演出
@@ -116,4 +169,11 @@ private:
 	KamataEngine::Sprite* countdownGoSprite_ = nullptr;
 
 	int countdownNumber_ = 0;
+
+	// ゴールの旗の配置位置
+	int flagMapX_ = 97;
+	int flagMapY_ = 12;
+
+	// ステージごとの旗配置を読み込む
+	void LoadFlagPositionForStage();
 };

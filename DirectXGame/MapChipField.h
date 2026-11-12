@@ -44,6 +44,12 @@ public:
 
 	Rect GetRectByIndex(uint32_t xIndex, uint32_t yIndex);
 
+	// 指定したマスのマップチップを変更する
+	void SetMapChipTypeByIndex(uint32_t xIndex, uint32_t yIndex, MapChipType type);
+
+	// マップチップデータをCSVに保存する
+	void SaveMapChipCsv(const std::string& filePath);
+
 private:
 	// 1ブロックのサイズ
 	static inline const float kBlockWidth = 1.0f;

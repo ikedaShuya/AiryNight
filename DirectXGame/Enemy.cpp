@@ -1,5 +1,6 @@
 #include "Enemy.h"
 #include "Player.h"
+#include "MapChipField.h"
 #include <numbers>
 #include <cassert>
 
@@ -31,6 +32,73 @@ void Enemy::Update(const Player* player) {
 		return;
 	}
 
+	// 落下中の処理
+
+	// Falling branch
+	if (isFalling_) {
+		// 重力で落下
+		fallSpeed_ -= kGravity;
+
+		float currentY = worldTransform_.translation_.y;
+		float nextY = currentY + fallSpeed_;
+
+		// 敵の足元の座標
+		float currentBottom = currentY - kHeight / 2.0f;
+		float nextBottom = nextY - kHeight / 2.0f;
+
+		// 着地判定
+		bool landed = false;
+
+		if (mapChipField_) {
+			for (uint32_t y = 0; y < mapChipField_->GetNumBlockVertical(); ++y) {
+				for (uint32_t x = 0; x < mapChipField_->GetNumBlockHorizontal(); ++x) {
+
+					// ブロック以外は無視
+					if (mapChipField_->GetMapChipTypeByIndex(x, y) != MapChipType::kBlock) {
+						continue;
+					}
+
+					// ブロックの範囲
+					MapChipField::Rect rect = mapChipField_->GetRectByIndex(x, y);
+
+					// 敵とブロックが左右に重なっているか
+					float enemyLeft = worldTransform_.translation_.x - kWidth / 2.0f;
+					float enemyRight = worldTransform_.translation_.x + kWidth / 2.0f;
+
+					if (enemyRight <= rect.left || enemyLeft >= rect.right) {
+						continue;
+					}
+
+					// ブロックの上面を通過したか
+					if (currentBottom >= rect.top && nextBottom <= rect.top) {
+						worldTransform_.translation_.y = rect.top + kHeight / 2.0f;
+						fallSpeed_ = 0.0f;
+						isFalling_ = false;
+						landed = true;
+						break;
+					}
+				}
+
+				if (landed) {
+					break;
+				}
+			}
+		}
+
+		// 着地していなければ落下を続ける
+		if (!landed) {
+			worldTransform_.translation_.y = nextY;
+		}
+
+		// マップの外まで落ちた場合
+		if (worldTransform_.translation_.y < -10.0f) {
+			isDead_ = true;
+		}
+
+		WorldTransformUpdate(worldTransform_);
+		return;
+	}
+
 	// 無敵時間カウント
 	if (invincibleTimer_ > 0) {
 		invincibleTimer_--;
@@ -44,7 +112,33 @@ void Enemy::Update(const Player* player) {
 		// 移動処理
 		{
 			Vector3 totalVelocity = velocity_ + knockbackVelocity_;
-			worldTransform_.translation_ += totalVelocity;
+
+			// 壁との当たり判定
+			float moveX = totalVelocity.x;
+			CheckMapCollisionX(moveX);
+
+			// 壁にぶつかった場合
+			if (moveX != totalVelocity.x) {
+				velocity_.x *= -1.0f;
+				knockbackVelocity_.x = 0.0f;
+			}
+
+			// 床がなくなる場合
+			if (!HasFloorAhead(moveX)) {
+
+				// 落下状態にする
+				isFalling_ = true;
+
+				// 落下速度を初期化
+				fallSpeed_ = 0.0f;
+
+				// ノックバックを停止
+				knockbackVelocity_.x = 0.0f;
+			}
+
+			// 移動
+			worldTransform_.translation_.x += moveX;
+			worldTransform_.translation_.y += totalVelocity.y;
 
 			// ノックバック減衰
 			knockbackVelocity_.x *= kKnockbackAttenuation;
@@ -167,4 +261,95 @@ void Enemy::OnHit(const Player* player) {
 	if (hp_ <= 0) {
 		isDead_ = true;
 	}
+}
+
+// 左右の壁との当たり判定
+void Enemy::CheckMapCollisionX(float& moveX) {
+
+	// マップが設定されていなければ処理しない
+	if (mapChipField_ == nullptr) {
+		return;
+	}
+
+	// 移動方向によって判定する
+	if (moveX > 0.0f) {
+
+		// 右側の壁を調べる
+		for (int i = 0; i < 2; i++) {
+
+			float offsetY = (i == 0) ? -kHeight / 2.0f : kHeight / 2.0f;
+
+			Vector3 checkPosition = worldTransform_.translation_ + Vector3(moveX + kWidth / 2.0f, offsetY, 0);
+
+			MapChipField::IndexSet indexSet = mapChipField_->GetMapChipIndexSetByPosition(checkPosition);
+
+			if (mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex) == MapChipType::kBlock) {
+
+				MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
+
+				moveX = rect.left - worldTransform_.translation_.x - (kWidth / 2.0f + kBlank);
+
+				break;
+			}
+		}
+
+	} else if (moveX < 0.0f) {
+
+		// 左側の壁を調べる
+		for (int i = 0; i < 2; i++) {
+
+			float offsetY = (i == 0) ? -kHeight / 2.0f : kHeight / 2.0f;
+
+			Vector3 checkPosition = worldTransform_.translation_ + Vector3(moveX - kWidth / 2.0f, offsetY, 0);
+
+			MapChipField::IndexSet indexSet = mapChipField_->GetMapChipIndexSetByPosition(checkPosition);
+
+			if (mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex) == MapChipType::kBlock) {
+
+				MapChipField::Rect rect = mapChipField_->GetRectByIndex(indexSet.xIndex, indexSet.yIndex);
+
+				moveX = rect.right - worldTransform_.translation_.x + (kWidth / 2.0f + kBlank);
+
+				break;
+			}
+		}
+	}
+}
+
+// 進行方向の先に床があるか確認
+bool Enemy::HasFloorAhead(float moveX) {
+
+	if (mapChipField_ == nullptr) {
+		return true;
+	}
+
+	if (moveX == 0.0f) {
+		return true;
+	}
+
+	// 移動方向
+	float direction = 1.0f;
+
+	if (moveX < 0.0f) {
+		direction = -1.0f;
+	}
+
+	// 敵の進行方向の足元を調べる
+	Vector3 checkPosition = worldTransform_.translation_;
+
+	checkPosition.x += moveX + direction * (kWidth / 2.0f);
+	checkPosition.y -= kHeight / 2.0f + 0.15f;
+
+	// マップチップの番号を取得
+	MapChipField::IndexSet indexSet = mapChipField_->GetMapChipIndexSetByPosition(checkPosition);
+
+	// マップの範囲外なら床がない
+	if (indexSet.xIndex >= mapChipField_->GetNumBlockHorizontal() || indexSet.yIndex >= mapChipField_->GetNumBlockVertical()) {
+		return false;
+	}
+
+	// 足元にブロックがあるか確認
+	MapChipType mapChipType = mapChipField_->GetMapChipTypeByIndex(indexSet.xIndex, indexSet.yIndex);
+
+	return mapChipType == MapChipType::kBlock;
 }

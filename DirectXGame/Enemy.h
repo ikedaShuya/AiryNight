@@ -3,6 +3,7 @@
 #include "Math.h"
 
 class Player;
+class MapChipField;
 
 enum class EnemyState { Moving, Waiting };
 
@@ -16,6 +17,9 @@ public:
 	/// 初期化
 	/// </summary>
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, const KamataEngine::Vector3& position);
+
+	// マップチップフィールドを設定
+	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
 	/// <summary>
 	/// 更新
@@ -54,6 +58,9 @@ private:
 	// カメラ
 	KamataEngine::Camera* camera_ = nullptr;
 
+	// マップチップフィールド
+	MapChipField* mapChipField_ = nullptr;
+
 	// 歩行の速さ
 	static inline const float kWalkSpeed = 0.02f;
 
@@ -73,6 +80,24 @@ private:
 	// キャラクターの当たり判定サイズ
 	static inline const float kWidth = 0.8f;
 	static inline const float kHeight = 0.8f;
+
+	// 壁との当たり判定
+	static inline const float kBlank = 0.04f;
+
+	// 左右の壁との当たり判定
+	void CheckMapCollisionX(float& moveX);
+
+	// 進行方向の先に床があるか確認
+	bool HasFloorAhead(float moveX);
+
+	// 落下中かどうか
+	bool isFalling_ = false;
+
+	// 落下速度
+	float fallSpeed_ = 0.0f;
+
+	// 重力
+	static inline const float kGravity = 0.02f;
 
 	// ===== ダメージ関連 =====
 

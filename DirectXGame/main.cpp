@@ -13,6 +13,8 @@ TitleScene* titleScene = nullptr;
 ClearScene* clearScene = nullptr;
 GameOverScene* gameOverScene = nullptr;
 
+int currentStage = 1;
+
 Fade fade;
 
 // シーンの表示時間（秒）
@@ -56,27 +58,41 @@ static bool IsSceneFinished() {
 static void ChangeSceneNow() {
 	switch (scene) {
 	case Scene::kTitle:
-		scene = Scene::kGame;
 
+		currentStage = 1;
+
+		scene = Scene::kGame;
 		delete titleScene;
 		titleScene = nullptr;
 
 		gameScene = new GameScene;
-		gameScene->Initialize();
+		gameScene->Initialize(currentStage);
 		break;
 
 	case Scene::kGame:
 		if (gameScene->GetResult() == GameResult::Clear) {
-			scene = Scene::kClear;
 
 			delete gameScene;
 			gameScene = nullptr;
 
-			clearScene = new ClearScene;
-			clearScene->Initialize();
-		} else if (gameScene->GetResult() == GameResult::GameOver) {
-			scene = Scene::kGameOver;
+			if (currentStage < 3) {
+				// 次のステージへ進む
+				currentStage++;
 
+				scene = Scene::kGame;
+				gameScene = new GameScene;
+				gameScene->Initialize(currentStage);
+
+			} else {
+				// ステージ3をクリアしたら最終クリア画面へ
+				scene = Scene::kClear;
+				clearScene = new ClearScene;
+				clearScene->Initialize();
+			}
+
+		} else if (gameScene->GetResult() == GameResult::GameOver) {
+
+			scene = Scene::kGameOver;
 			delete gameScene;
 			gameScene = nullptr;
 
@@ -96,15 +112,13 @@ static void ChangeSceneNow() {
 		break;
 
 	case Scene::kGameOver:
-		// ゲームオーバー画面を削除
 		delete gameOverScene;
 		gameOverScene = nullptr;
 
-		// ゲームシーンを最初から作り直す
+		// ゲームオーバーになったステージから再挑戦
 		scene = Scene::kGame;
-
 		gameScene = new GameScene;
-		gameScene->Initialize();
+		gameScene->Initialize(currentStage);
 		break;
 
 	default:
@@ -194,8 +208,17 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		fade.Update();
 
 		ChangeScene();
+
+#ifdef USE_IMGUI
+		KamataEngine::ImGuiManager::GetInstance()->Begin();
+#endif
+
 		// 現在シーン更新
 		UpdateScene();
+
+#ifdef USE_IMGUI
+		KamataEngine::ImGuiManager::GetInstance()->End();
+#endif
 
 		// 描画開始
 		dxCommon->PreDraw();
@@ -206,12 +229,18 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// フェード描画
 		fade.Draw();
 
+#ifdef USE_IMGUI
+		KamataEngine::ImGuiManager::GetInstance()->Draw();
+#endif
+
 		// 描画終了
 		dxCommon->PostDraw();
 	}
 
 	delete titleScene;
 	delete gameScene;
+	delete clearScene;
+	delete gameOverScene;
 
 	// エンジンの終了処理
 	Finalize();
