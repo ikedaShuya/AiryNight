@@ -55,6 +55,7 @@ static bool IsSceneFinished() {
 	}
 }
 
+
 static void ChangeSceneNow() {
 	switch (scene) {
 	case Scene::kTitle:
@@ -72,23 +73,20 @@ static void ChangeSceneNow() {
 	case Scene::kGame:
 		if (gameScene->GetResult() == GameResult::Clear) {
 
+			// ゲームのプレイ時間を取得
+			int clearPlayTimer = gameScene->GetPlayTimer();
+
+			// 敵の撃破数を取得
+			int clearDefeatedEnemyCount = gameScene->GetDefeatedEnemyCount();
+
+			// ゲームシーンを削除
 			delete gameScene;
 			gameScene = nullptr;
 
-			if (currentStage < 3) {
-				// 次のステージへ進む
-				currentStage++;
-
-				scene = Scene::kGame;
-				gameScene = new GameScene;
-				gameScene->Initialize(currentStage);
-
-			} else {
-				// ステージ3をクリアしたら最終クリア画面へ
-				scene = Scene::kClear;
-				clearScene = new ClearScene;
-				clearScene->Initialize();
-			}
+			// クリアリザルト画面へ
+			scene = Scene::kClear;
+			clearScene = new ClearScene;
+			clearScene->Initialize(currentStage, clearPlayTimer, clearDefeatedEnemyCount);
 
 		} else if (gameScene->GetResult() == GameResult::GameOver) {
 
@@ -102,11 +100,15 @@ static void ChangeSceneNow() {
 		break;
 
 	case Scene::kClear:
-		scene = Scene::kTitle;
 
+		// リザルト画面を削除
 		delete clearScene;
 		clearScene = nullptr;
 
+		// クリア後はタイトルへ戻る
+		currentStage = 1;
+
+		scene = Scene::kTitle;
 		titleScene = new TitleScene;
 		titleScene->Initialize();
 		break;

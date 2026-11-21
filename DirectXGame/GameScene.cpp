@@ -113,6 +113,11 @@ void GameScene::Initialize(int stageNumber) {
 	gameOverFadeSprite_->SetSize({1280.0f, 720.0f});
 	gameOverFadeSprite_->SetColor({0.0f, 0.0f, 0.0f, 0.0f});
 
+	// ゲームクリア演出用フラッシュ
+	gameClearFlashSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f});
+	gameClearFlashSprite_->SetSize({1280.0f, 720.0f});
+	gameClearFlashSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
+
 	// カウントダウン画像を読み込む
 	countdown3Sprite_ = Sprite::Create(TextureManager::Load("countdown_3.png"), {640.0f, 360.0f});
 
@@ -646,6 +651,18 @@ void GameScene::Update() {
 		return;
 	}
 
+	// ゲームクリア演出中
+	if (isGameClearPlaying_) {
+		gameClearTimer_++;
+
+		if (gameClearTimer_ >= kGameClearFrame) {
+			result_ = GameResult::Clear;
+			finished_ = true;
+		}
+
+		return;
+	}
+
 	// プレイヤー死亡判定
 	if (player_->GetHp() <= 0) {
 
@@ -666,8 +683,9 @@ void GameScene::Update() {
 	float distanceY = playerPosition.y - goalPosition_.y;
 
 	if (distanceX > -1.0f && distanceX < 1.0f && distanceY > -1.0f && distanceY < 3.0f) {
-		result_ = GameResult::Clear;
-		finished_ = true;
+		isGameClearPlaying_ = true;
+		gameClearTimer_ = 0;
+		player_->SetControllable(false);
 		return;
 	}
 
@@ -694,6 +712,11 @@ void GameScene::Update() {
 		player_->SetControllable(true);
 	}
 
+	// ゲーム開始後のプレイ時間を計測
+	if (startTimer_ >= kGameStartFrame) {
+		playTimer_++;
+	}
+
 	skyDome_->Update();
 
 	float hpRate = static_cast<float>(player_->GetHp()) / static_cast<float>(player_->GetMaxHp());
@@ -702,8 +725,12 @@ void GameScene::Update() {
 	hpBarFg_->SetSize({100.0f * hpRate, 10.0f});
 
 	// デスフラグの立った敵を削除
-	enemies_.remove_if([](Enemy* enemy) {
+	enemies_.remove_if([this](Enemy* enemy) {
 		if (enemy->IsDead()) {
+
+			// 敵の撃破数を増やす
+			defeatedEnemyCount_++;
+
 			delete enemy;
 			return true;
 		}
@@ -791,6 +818,18 @@ void GameScene::Draw() {
 		gameOverFadeSprite_->Draw();
 	}
 
+	// ゲームクリア演出
+	if (isGameClearPlaying_) {
+		float alpha = 0.0f;
+
+		if (gameClearTimer_ < 10) {
+			alpha = 1.0f - (float)gameClearTimer_ / 10.0f;
+		}
+
+		gameClearFlashSprite_->SetColor({1.0f, 1.0f, 1.0f, alpha});
+		gameClearFlashSprite_->Draw();
+	}
+
 	// スプライト描画後処理
 	Sprite::PostDraw();
 }
@@ -841,6 +880,7 @@ GameScene::~GameScene() {
 	delete countdown1Sprite_;
 	delete countdownGoSprite_;
 	delete gameOverFadeSprite_;
+	delete gameClearFlashSprite_;
 }
 
 void GameScene::GenerateBlocks() {

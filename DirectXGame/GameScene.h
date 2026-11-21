@@ -30,6 +30,11 @@ public:
 
 	GameResult GetResult() const { return result_; }
 
+	int GetPlayTimer() const { return playTimer_; }
+
+	// 敵の撃破数を取得
+	int GetDefeatedEnemyCount() const { return defeatedEnemyCount_; }
+
 	void GenerateBlocks();
 
 	// 敵を配置データから生成する
@@ -142,6 +147,19 @@ private:
 
 	static constexpr int kGameOverFlashFrame = 10;
 
+	// ゲームクリア演出
+	bool isGameClearPlaying_ = false;
+	int gameClearTimer_ = 0;
+
+	// クリア演出の時間
+	static constexpr int kGameClearFrame = 120;
+
+	// ゲームプレイ時間
+	int playTimer_ = 0;
+
+	// 敵の撃破数
+	int defeatedEnemyCount_ = 0;
+
 	// ゲームオーバー開始時のカメラ画角
 	float gameOverStartFovY_ = 0.0f;
 
@@ -150,6 +168,10 @@ private:
 
 	// 画面を暗くするスプライト
 	KamataEngine::Sprite* gameOverFadeSprite_ = nullptr;
+
+	// ゲームクリア演出用スプライト
+	KamataEngine::Sprite* gameClearSprite_ = nullptr;
+	KamataEngine::Sprite* gameClearFlashSprite_ = nullptr;
 
 	KamataEngine::Sprite* aSprite_ = nullptr;
 
