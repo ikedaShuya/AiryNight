@@ -1,11 +1,12 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "Effect.h"
 
-class GameClearEffect {
+class GameClearEffect : public Effect {
 public:
 	// 初期化
-	void Initialize();
+	void Initialize() override;
 
 	// 演出開始
 	void Start();
@@ -14,13 +15,13 @@ public:
 	bool Update();
 
 	// 描画
-	void Draw();
+	void Draw() override;
 
 	// 演出中かどうか
 	bool IsPlaying() const { return isPlaying_; }
 
 	// 終了
-	~GameClearEffect();
+	~GameClearEffect() override;
 
 private:
 	// 演出中かどうか

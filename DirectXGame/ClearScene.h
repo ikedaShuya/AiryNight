@@ -4,9 +4,11 @@
 #include "SkyDome.h"
 #include "ClearSceneLayout.h"
 #include "ClearSceneEffect.h"
+#include "Scene.h"
+#include "Effect.h"
 #include <numbers>
 
-class ClearScene {
+class ClearScene : public Scene {
 public:
 	/// <summary>
 	/// 初期化
@@ -16,16 +18,16 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 
-	~ClearScene();
+	~ClearScene() override;
 
-	bool IsFinished() const { return finished_; }
+	bool IsFinished() const override { return finished_; }
 
 private:
 
@@ -83,6 +85,9 @@ private:
 
 	// クリア演出
 	ClearSceneEffect clearSceneEffect_;
+
+	// エフェクトの基底クラスのポインタ
+	Effect* effect_ = nullptr;
 
 	// PRESS SPACEのスプライト
 	KamataEngine::Sprite* pressSpaceSprite_ = nullptr;

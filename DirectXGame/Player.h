@@ -1,6 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
+#include "Character.h"
 
 class MapChipField;
 
@@ -9,7 +10,7 @@ class Enemy;
 /// <summary>
 /// 自キャラ
 /// </summary>
-class Player {
+class Player : public Character {
 public:
 	/// <summary>
 	/// 初期化
@@ -24,7 +25,7 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 	
 	// 左右
 	enum class LRDirection {
@@ -39,10 +40,10 @@ public:
 	const KamataEngine::Vector3& GetVelocity() const { return velocity_; }
 
 	// ワールド座標を取得
-	KamataEngine::Vector3 GetWorldPosition() const;
+	KamataEngine::Vector3 GetWorldPosition() const override;
 
 	// AABBを取得
-	AABB GetAABB() const;
+	AABB GetAABB() const override;
 
 	// 衝突応答
 	void OnCollision(const Enemy* enemy);

@@ -5,6 +5,7 @@
 #include "GameOverScene.h"
 #include "GameScene.h"
 #include "TitleScene.h"
+#include "Scene.h"
 
 class SceneManager {
 public:
@@ -22,7 +23,7 @@ public:
 
 private:
 	// シーンの種類
-	enum class Scene {
+	enum class SceneType {
 		kUnknown = 0,
 		kTitle,
 		kGame,
@@ -30,14 +31,11 @@ private:
 		kGameOver,
 	};
 
-	// シーン管理用ポインタ
-	GameScene* gameScene_ = nullptr;
-	TitleScene* titleScene_ = nullptr;
-	ClearScene* clearScene_ = nullptr;
-	GameOverScene* gameOverScene_ = nullptr;
+	// 現在のシーンを管理する基底クラスのポインタ
+	Scene* currentScene_ = nullptr;
 
 	// 現在のシーン
-	Scene scene_ = Scene::kUnknown;
+	SceneType scene_ = SceneType::kUnknown;
 
 	// 現在のステージ
 	int currentStage_ = 1;

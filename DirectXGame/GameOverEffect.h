@@ -1,11 +1,12 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "Effect.h"
 
-class GameOverEffect {
+class GameOverEffect : public Effect {
 public:
 	// 初期化
-	void Initialize();
+	void Initialize() override;
 
 	// ゲームオーバー演出開始
 	void Start(const KamataEngine::Camera& camera);
@@ -14,13 +15,13 @@ public:
 	bool Update(KamataEngine::Camera& camera);
 
 	// 描画
-	void Draw();
+	void Draw() override;
 
 	// 演出中かどうか
 	bool IsPlaying() const { return isPlaying_; }
 
 	// 終了
-	~GameOverEffect();
+	~GameOverEffect() override;
 
 private:
 	// 演出中かどうか

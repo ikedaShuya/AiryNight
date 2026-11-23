@@ -24,26 +24,28 @@
 #include "MapEditorController.h"
 #endif
 
+#include "Scene.h"
+
 enum class GameResult { None, Clear, GameOver };
 
 /// <summary>
 /// ゲームシーン
 /// </summary>
-class GameScene {
+class GameScene : public Scene {
 public:
 	// 初期化
 	void Initialize(int stageNumber = 1);
 
 	// 更新
-	void Update();
+	void Update() override;
 
 	// 描画
-	void Draw();
+	void Draw() override;
 
-	~GameScene();
+	~GameScene() override;
 
 	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
+	bool IsFinished() const override { return finished_; }
 
 	GameResult GetResult() const { return result_; }
 
@@ -127,7 +129,10 @@ private:
 	GameClearEffect gameClearEffect_;
 
 	// ゲーム開始演出
-	GameStartEffect gameStartEffect_;
+	GameStartEffect gameStartEffect_;	
+
+	// エフェクトを基底クラスのポインタで管理
+	Effect* effects_[3] = {};
 
 	// HPバー関連の処理
 	HpBar hpBar_;
