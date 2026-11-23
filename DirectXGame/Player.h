@@ -25,58 +25,12 @@ public:
 	/// 描画
 	/// </summary>
 	void Draw();
-
-	// プレイヤーの横移動入力を処理する
-	void InputHorizontal();
-
-	// 移動入力
-	void InputMove();
-
-	// ジャンプ処理を行う
-	void ProcessJump();
-
-	// 重力による落下処理を行う
-	void ApplyGravity();
-
+	
 	// 左右
 	enum class LRDirection {
 		kRight,
 		kLeft,
 	};
-
-	// マップとの当たり判定情報
-	struct CollisionMapInfo {
-		bool ceiling = false;
-		bool landing = false;
-		bool hitWall = false;
-		KamataEngine::Vector3 move{};
-	};
-
-	// マップ衝突判定
-	void CheckMapCollision(CollisionMapInfo& info);
-
-	void CheckMapCollisionUp(CollisionMapInfo& info);
-	void CheckMapCollisionDown(CollisionMapInfo& info);
-	void CheckMapCollisionRight(CollisionMapInfo& info);
-	void CheckMapCollisionLeft(CollisionMapInfo& info);
-
-	// 角
-	enum Corner {
-		kRightBottom, // 右下
-		kLeftBottom,  // 左下
-		kRightTop,    // 右上
-		kLeftTop,     // 左上
-
-		kNumCorner // 要素数
-	};
-
-	KamataEngine::Vector3 CornerPosition(const KamataEngine::Vector3& center, Corner corner);
-
-	// 接地状態の切り替え処理
-	void UpdateOnGround(const CollisionMapInfo& info);
-
-	// 壁に接触している場合の処理
-	void UpdateOnWall(const CollisionMapInfo& info);
 
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
 
@@ -93,9 +47,6 @@ public:
 	// 衝突応答
 	void OnCollision(const Enemy* enemy);
 
-	// 近接攻撃
-	void ProcessAttack();
-
 	// 攻撃判定AABBを取得
 	AABB GetAttackAABB() const;
 
@@ -107,9 +58,6 @@ public:
 
 	int GetHp() const { return hp_; }
 	int GetMaxHp() const { return maxHp_; }
-
-	// ダメージ処理
-	void TakeDamage(int damage);
 
 	KamataEngine::Vector3 GetHeadWorldPosition() const;
 
@@ -130,6 +78,64 @@ public:
 	}
 
 private:
+
+	// ============================
+	// 内部処理
+	// ============================
+
+	// マップとの当たり判定情報
+	struct CollisionMapInfo {
+		bool ceiling = false;
+		bool landing = false;
+		bool hitWall = false;
+		KamataEngine::Vector3 move{};
+	};
+
+	// 角
+	enum Corner {
+		kRightBottom, // 右下
+		kLeftBottom,  // 左下
+		kRightTop,    // 右上
+		kLeftTop,     // 左上
+
+		kNumCorner // 要素数
+	};
+
+	// プレイヤーの横移動入力を処理する
+	void InputHorizontal();
+
+	// 移動入力
+	void InputMove();
+
+	// ジャンプ処理
+	void ProcessJump();
+
+	// 重力による落下処理
+	void ApplyGravity();
+
+	// マップ衝突判定
+	void CheckMapCollision(CollisionMapInfo& info);
+
+	void CheckMapCollisionUp(CollisionMapInfo& info);
+	void CheckMapCollisionDown(CollisionMapInfo& info);
+	void CheckMapCollisionRight(CollisionMapInfo& info);
+	void CheckMapCollisionLeft(CollisionMapInfo& info);
+
+	// 角の位置を取得
+	KamataEngine::Vector3 CornerPosition(const KamataEngine::Vector3& center, Corner corner);
+
+	// 接地状態の切り替え
+	void UpdateOnGround(const CollisionMapInfo& info);
+
+	// 壁に接触している場合の処理
+	void UpdateOnWall(const CollisionMapInfo& info);
+
+	// 近接攻撃
+	void ProcessAttack();
+
+	// ダメージ処理
+	void TakeDamage(int damage);
+
 	// ============================
 	// モデル・カメラ関連
 	// ============================
@@ -233,12 +239,9 @@ private:
 	// ワールド変換
 	KamataEngine::WorldTransform swordWorldTransform_;
 
-	// 初期姿勢
-	KamataEngine::Vector3 swordStartRotation_;
-	KamataEngine::Vector3 swordStartTranslation_;
-
-	// スケール
-	KamataEngine::Vector3 swordScale_;
+	KamataEngine::Vector3 swordStartRotation_{};
+	KamataEngine::Vector3 swordStartTranslation_{};
+	KamataEngine::Vector3 swordScale_{};
 
 	// ============================
 	// HP・ダメージ

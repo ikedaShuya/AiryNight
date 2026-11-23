@@ -197,7 +197,7 @@ void Enemy::Update(const Player* player) {
 
 void Enemy::Draw() { model_->Draw(worldTransform_, *camera_); }
 
-KamataEngine::Vector3 Enemy::GetWorldPosition() {
+KamataEngine::Vector3 Enemy::GetWorldPosition() const {
 
 	// ワールド座標を入れる変数
 	Vector3 worldPos;
@@ -209,7 +209,7 @@ KamataEngine::Vector3 Enemy::GetWorldPosition() {
 	return worldPos;
 }
 
-AABB Enemy::GetAABB() {
+AABB Enemy::GetAABB() const {
 	Vector3 worldPos = GetWorldPosition();
 
 	AABB aabb;

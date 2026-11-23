@@ -155,17 +155,32 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BlockManager.cpp" />
     <ClCompile Include="ClearScene.cpp" />
+    <ClCompile Include="ClearSceneEffect.cpp" />
+    <ClCompile Include="ClearSceneLayout.cpp" />
+    <ClCompile Include="CollisionManager.cpp" />
     <ClCompile Include="Enemy.cpp" />
     <ClCompile Include="CameraController.cpp" />
+    <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="GameClearEffect.cpp" />
+    <ClCompile Include="GameOverEffect.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
     <ClCompile Include="GameScene.cpp" />
+    <ClCompile Include="GameStartEffect.cpp" />
+    <ClCompile Include="Goal.cpp" />
+    <ClCompile Include="HpBar.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MapChipField.cpp" />
+    <ClCompile Include="MapEditorController.cpp" />
     <ClCompile Include="Math.cpp" />
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="SceneManager.cpp" />
     <ClCompile Include="SkyDome.cpp" />
+    <ClCompile Include="StageDataLoader.cpp" />
+    <ClCompile Include="StageMapLoader.cpp" />
+    <ClCompile Include="StagePlacementDataSaver.cpp" />
     <ClCompile Include="TitleScene.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -266,16 +281,33 @@
     <None Include="Resources\shaders\Sprite.hlsli" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="BlockManager.h" />
     <ClInclude Include="ClearScene.h" />
+    <ClInclude Include="ClearSceneEffect.h" />
+    <ClInclude Include="ClearSceneLayout.h" />
+    <ClInclude Include="CollisionManager.h" />
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="CameraController.h" />
+    <ClInclude Include="EnemyManager.h" />
     <ClInclude Include="Fade.h" />
+    <ClInclude Include="GameClearEffect.h" />
+    <ClInclude Include="GameOverEffect.h" />
     <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="GameStartEffect.h" />
+    <ClInclude Include="Goal.h" />
+    <ClInclude Include="HpBar.h" />
     <ClInclude Include="MapChipField.h" />
+    <ClInclude Include="MapEditor.h" />
+    <ClInclude Include="MapEditorController.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SkyDome.h" />
+    <ClInclude Include="StageDataLoader.h" />
+    <ClInclude Include="StageMapLoader.h" />
+    <ClInclude Include="StagePlacementData.h" />
+    <ClInclude Include="StagePlacementDataSaver.h" />
     <ClInclude Include="TitleScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

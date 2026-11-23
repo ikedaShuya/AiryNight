@@ -5,11 +5,6 @@
 
 class Fade {
 public:
-	enum class Status {
-		kNone,
-		kFadeOut,
-		kFadeIn,
-	};
 
 	void Initialize();
 	void Update();
@@ -22,6 +17,14 @@ public:
 	bool IsFadeInFinished() const { return fadeInFinished_; }
 
 private:
+
+	// フェードの状態
+	enum class Status {
+		kNone,
+		kFadeOut,
+		kFadeIn,
+	};
+
 	static const int kStarCount = 12;
 
 	KamataEngine::Sprite* sprite_ = nullptr;
