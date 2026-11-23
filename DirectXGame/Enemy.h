@@ -1,6 +1,7 @@
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
+#include "Character.h"
 
 class Player;
 class MapChipField;
@@ -8,7 +9,7 @@ class MapChipField;
 /// <summary>
 /// 敵
 /// </summary>
-class Enemy {
+class Enemy : public Character {
 
 public:
 	/// <summary>
@@ -27,10 +28,10 @@ public:
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 
-	KamataEngine::Vector3 GetWorldPosition() const;
-	AABB GetAABB() const;
+	KamataEngine::Vector3 GetWorldPosition() const override;
+	AABB GetAABB() const override;
 
 	// 衝突応答
 	void OnCollision(const Player* player);
@@ -116,7 +117,7 @@ private:
 
 	static inline const float kKnockbackPower = 0.25f;
 
-	 EnemyState state_ = EnemyState::Moving;
+	EnemyState state_ = EnemyState::Moving;
 	float stateTimer_ = 0.0f; // 状態継続時間カウント
 
 	const float moveDuration_ = 2.0f; // 2秒間移動

@@ -1,17 +1,18 @@
 #pragma once
 #include "KamataEngine.h"
+#include "Effect.h"
 
-class ClearSceneEffect {
+class ClearSceneEffect : public Effect {
 public:
-	void Initialize();
+	void Initialize() override;
 
 	float Update(float finalTitleScale);
 
-	void Draw();
+	void Draw() override;
 
 	bool IsFlashFinished() const { return clearFlashTimer_ >= 90; }
 
-	~ClearSceneEffect();
+	~ClearSceneEffect() override;
 
 private:
 	// CLEAR文字の登場演出

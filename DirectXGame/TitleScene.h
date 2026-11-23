@@ -1,11 +1,12 @@
 #pragma once
 #include "KamataEngine.h"
 #include "SkyDome.h"
+#include "Scene.h"
 
 /// <summary>
 /// タイトルシーン
 /// </summary>
-class TitleScene {
+class TitleScene : public Scene {
 public:
 	/// <summary>
 	/// 初期化
@@ -15,17 +16,17 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 
-	~TitleScene();
+	~TitleScene() override;
 	
 	// デスフラグのgetter
-	bool IsFinished() const { return finished_; }
+	bool IsFinished() const override { return finished_; }
 
 private:
 

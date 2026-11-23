@@ -42,8 +42,11 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 		break;
 	}
 
-	// クリア演出の初期化
-	clearSceneEffect_.Initialize();
+	// エフェクトを基底クラスのポインタに登録
+	effect_ = &clearSceneEffect_;
+
+	// エフェクトの初期化
+	effect_->Initialize();
 
 	// リザルト情報の背景パネル
 	resultPanelSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {390.0f, 300.0f});
@@ -219,8 +222,8 @@ void ClearScene::Draw() {
 
 	Sprite::PreDraw();
 
-	// クリア演出の描画
-	clearSceneEffect_.Draw();
+	// エフェクトの描画
+	effect_->Draw();
 
 	resultPanelSprite_->Draw();
 

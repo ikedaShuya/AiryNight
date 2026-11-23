@@ -1,17 +1,18 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "Effect.h"
 
-class GameStartEffect {
+class GameStartEffect : public Effect {
 public:
 	// 初期化
-	void Initialize();
+	void Initialize() override;
 
 	// 更新
 	void Update();
 
 	// 描画
-	void Draw();
+	void Draw() override;
 
 	// 演出が終了したか
 	bool IsFinished() const { return timer_ >= kGameStartFrame; }
@@ -22,7 +23,7 @@ public:
 	// 経過時間
 	int GetTimer() const { return timer_; }
 
-	~GameStartEffect();
+	~GameStartEffect() override;
 
 private:
 	// 演出タイマー

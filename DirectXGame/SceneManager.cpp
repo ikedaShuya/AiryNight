@@ -6,9 +6,12 @@ void SceneManager::Initialize() {
 	fade_.Initialize();
 
 	// 最初のシーンをタイトルにする
-	scene_ = Scene::kTitle;
-	titleScene_ = new TitleScene;
-	titleScene_->Initialize();
+	scene_ = SceneType::kTitle;
+
+	TitleScene* titleScene = new TitleScene;
+	titleScene->Initialize();
+
+	currentScene_ = titleScene;
 }
 
 void SceneManager::Update() {
@@ -34,110 +37,111 @@ void SceneManager::Draw() {
 
 void SceneManager::Finalize() {
 
-	// シーンの解放
-	delete titleScene_;
-	titleScene_ = nullptr;
-
-	delete gameScene_;
-	gameScene_ = nullptr;
-
-	delete clearScene_;
-	clearScene_ = nullptr;
-
-	delete gameOverScene_;
-	gameOverScene_ = nullptr;
+	// 現在のシーンを解放
+	delete currentScene_;
+	currentScene_ = nullptr;
 }
 
 bool SceneManager::IsSceneFinished() {
 
-	switch (scene_) {
-	case Scene::kTitle:
-		return titleScene_->IsFinished();
-
-	case Scene::kGame:
-		return gameScene_->IsFinished();
-
-	case Scene::kClear:
-		return clearScene_->IsFinished();
-
-	case Scene::kGameOver:
-		return gameOverScene_->IsFinished();
-
-	default:
+	if (currentScene_ == nullptr) {
 		return false;
 	}
+
+	return currentScene_->IsFinished();
 }
 
 void SceneManager::ChangeSceneNow() {
 
 	switch (scene_) {
-	case Scene::kTitle:
+	case SceneType::kTitle:
 
 		currentStage_ = 1;
 
-		scene_ = Scene::kGame;
+		// タイトルシーンを削除
+		delete currentScene_;
+		currentScene_ = nullptr;
 
-		delete titleScene_;
-		titleScene_ = nullptr;
+		// ゲームシーンを生成
+		scene_ = SceneType::kGame;
 
-		gameScene_ = new GameScene;
-		gameScene_->Initialize(currentStage_);
-		break;
-
-	case Scene::kGame:
-
-		if (gameScene_->GetResult() == GameResult::Clear) {
-
-			// ゲームのプレイ時間を取得
-			int clearPlayTimer = gameScene_->GetPlayTimer();
-
-			// 敵の撃破数を取得
-			int clearDefeatedEnemyCount = gameScene_->GetDefeatedEnemyCount();
-
-			// ゲームシーンを削除
-			delete gameScene_;
-			gameScene_ = nullptr;
-
-			// クリアリザルト画面へ
-			scene_ = Scene::kClear;
-			clearScene_ = new ClearScene;
-			clearScene_->Initialize(currentStage_, clearPlayTimer, clearDefeatedEnemyCount);
-
-		} else if (gameScene_->GetResult() == GameResult::GameOver) {
-
-			scene_ = Scene::kGameOver;
-
-			delete gameScene_;
-			gameScene_ = nullptr;
-
-			gameOverScene_ = new GameOverScene;
-			gameOverScene_->Initialize();
+		{
+			GameScene* gameScene = new GameScene;
+			gameScene->Initialize(currentStage_);
+			currentScene_ = gameScene;
 		}
 		break;
 
-	case Scene::kClear:
+	case SceneType::kGame: {
+		// ゲームシーン固有の情報を取得
+		GameScene* gameScene = static_cast<GameScene*>(currentScene_);
+
+		if (gameScene->GetResult() == GameResult::Clear) {
+
+			// ゲームのプレイ時間を取得
+			int clearPlayTimer = gameScene->GetPlayTimer();
+
+			// 敵の撃破数を取得
+			int clearDefeatedEnemyCount = gameScene->GetDefeatedEnemyCount();
+
+			// ゲームシーンを削除
+			delete currentScene_;
+			currentScene_ = nullptr;
+
+			// クリアリザルト画面へ
+			scene_ = SceneType::kClear;
+
+			ClearScene* clearScene = new ClearScene;
+			clearScene->Initialize(currentStage_, clearPlayTimer, clearDefeatedEnemyCount);
+			currentScene_ = clearScene;
+
+		} else if (gameScene->GetResult() == GameResult::GameOver) {
+
+			// ゲームシーンを削除
+			delete currentScene_;
+			currentScene_ = nullptr;
+
+			// ゲームオーバー画面へ
+			scene_ = SceneType::kGameOver;
+
+			GameOverScene* gameOverScene = new GameOverScene;
+			gameOverScene->Initialize();
+			currentScene_ = gameOverScene;
+		}
+		break;
+	}
+
+	case SceneType::kClear:
 
 		// リザルト画面を削除
-		delete clearScene_;
-		clearScene_ = nullptr;
+		delete currentScene_;
+		currentScene_ = nullptr;
 
 		// クリア後はタイトルへ戻る
 		currentStage_ = 1;
+		scene_ = SceneType::kTitle;
 
-		scene_ = Scene::kTitle;
-		titleScene_ = new TitleScene;
-		titleScene_->Initialize();
+		{
+			TitleScene* titleScene = new TitleScene;
+			titleScene->Initialize();
+			currentScene_ = titleScene;
+		}
 		break;
 
-	case Scene::kGameOver:
+	case SceneType::kGameOver:
 
-		delete gameOverScene_;
-		gameOverScene_ = nullptr;
+		// ゲームオーバー画面を削除
+		delete currentScene_;
+		currentScene_ = nullptr;
 
 		// ゲームオーバーになったステージから再挑戦
-		scene_ = Scene::kGame;
-		gameScene_ = new GameScene;
-		gameScene_->Initialize(currentStage_);
+		scene_ = SceneType::kGame;
+
+		{
+			GameScene* gameScene = new GameScene;
+			gameScene->Initialize(currentStage_);
+			currentScene_ = gameScene;
+		}
 		break;
 
 	default:
@@ -170,42 +174,14 @@ void SceneManager::ChangeScene() {
 
 void SceneManager::UpdateScene() {
 
-	switch (scene_) {
-	case Scene::kTitle:
-		titleScene_->Update();
-		break;
-
-	case Scene::kGame:
-		gameScene_->Update();
-		break;
-
-	case Scene::kClear:
-		clearScene_->Update();
-		break;
-
-	case Scene::kGameOver:
-		gameOverScene_->Update();
-		break;
+	if (currentScene_ != nullptr) {
+		currentScene_->Update();
 	}
 }
 
 void SceneManager::DrawScene() {
 
-	switch (scene_) {
-	case Scene::kTitle:
-		titleScene_->Draw();
-		break;
-
-	case Scene::kGame:
-		gameScene_->Draw();
-		break;
-
-	case Scene::kClear:
-		clearScene_->Draw();
-		break;
-
-	case Scene::kGameOver:
-		gameOverScene_->Draw();
-		break;
+	if (currentScene_ != nullptr) {
+		currentScene_->Draw();
 	}
 }

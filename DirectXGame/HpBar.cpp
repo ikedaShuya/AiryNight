@@ -17,6 +17,10 @@ void HpBar::Initialize() {
 }
 
 void HpBar::Update(int hp, int maxHp) {
+	if (maxHp <= 0) {
+		return;
+	}
+
 	float hpRate = static_cast<float>(hp) / static_cast<float>(maxHp);
 	foreground_->SetSize({100.0f * hpRate, 10.0f});
 }

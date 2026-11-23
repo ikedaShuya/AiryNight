@@ -2,8 +2,9 @@
 #include "KamataEngine.h"
 #include "Math.h"
 #include "SkyDome.h"
+#include "Scene.h"
 
-class GameOverScene {
+class GameOverScene : public Scene {
 public:
 	/// <summary>
 	/// 初期化
@@ -13,16 +14,16 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void Update();
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void Draw();
+	void Draw() override;
 
-	~GameOverScene();
+	~GameOverScene() override;
 
-	bool IsFinished() const { return finished_; }
+	bool IsFinished() const override { return finished_; }
 
 private:
 

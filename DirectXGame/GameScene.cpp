@@ -75,14 +75,15 @@ void GameScene::Initialize(int stageNumber) {
 
 	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
 
-	// ゲームオーバー演出の初期化
-	gameOverEffect_.Initialize();
+	// エフェクトを基底クラスのポインタに登録
+	effects_[0] = &gameOverEffect_;
+	effects_[1] = &gameClearEffect_;
+	effects_[2] = &gameStartEffect_;
 
-	// ゲームクリア演出の初期化
-	gameClearEffect_.Initialize();
-
-	// ゲーム開始演出の初期化
-	gameStartEffect_.Initialize();
+	// すべてのエフェクトを初期化
+	for (int i = 0; i < 3; i++) {
+		effects_[i]->Initialize();
+	}
 }
 
 void GameScene::Update() {
@@ -205,13 +206,10 @@ void GameScene::Draw() {
 	hpBar_.Draw();
 	aSprite_->Draw();
 
-	gameStartEffect_.Draw();
-
-	// ゲームオーバー演出
-	gameOverEffect_.Draw();
-
-	// ゲームクリア演出
-	gameClearEffect_.Draw();
+	// すべてのエフェクトを描画
+	for (int i = 0; i < 3; i++) {
+		effects_[i]->Draw();
+	}
 
 	// スプライト描画後処理
 	Sprite::PostDraw();

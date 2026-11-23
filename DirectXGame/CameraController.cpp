@@ -12,6 +12,9 @@ void CameraController::Initialize(Camera* camera) {
 
 void CameraController::Update() {
 
+	assert(camera_);
+	assert(target_);
+
 	// 追従対象のワールドトランスフォームを参照
 	const WorldTransform& targetWorldTransform = target_->GetWorldTransform();
 
@@ -40,6 +43,9 @@ void CameraController::Update() {
 }
 
 void CameraController::Reset() {
+
+	assert(camera_);
+	assert(target_);
 
 	// 追従対象のワールドトランスフォームを参照
 	const WorldTransform& targetWorldTransform = target_->GetWorldTransform();
