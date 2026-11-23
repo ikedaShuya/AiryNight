@@ -6,10 +6,6 @@ enum class MapChipType {
 	kBlock, // ブロック
 };
 
-struct MapChipData {
-	std::vector<std::vector<MapChipType>> data;
-};
-
 /// <summary>
 /// マップチップフィールド
 /// </summary>
@@ -51,6 +47,12 @@ public:
 	void SaveMapChipCsv(const std::string& filePath);
 
 private:
+
+	// マップチップデータ
+	struct MapChipData {
+		std::vector<std::vector<MapChipType>> data;
+	};
+
 	// 1ブロックのサイズ
 	static inline const float kBlockWidth = 1.0f;
 	static inline const float kBlockHeight = 1.0f;
