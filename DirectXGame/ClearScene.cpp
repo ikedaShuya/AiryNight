@@ -1,11 +1,5 @@
 #include "ClearScene.h"
 
-#ifdef USE_IMGUI
-#include <imgui.h>
-#endif
-
-#include <cstdio>
-#include <fstream>
 #include <cmath>
 
 using namespace KamataEngine;
@@ -48,38 +42,13 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 		break;
 	}
 
-	// 画面全体を覆う白いスプライト
-	clearFlashSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f});
+	// クリア演出の初期化
+	clearSceneEffect_.Initialize();
 
 	// リザルト情報の背景パネル
 	resultPanelSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {390.0f, 300.0f});
 	resultPanelSprite_->SetSize({500.0f, 320.0f});
 	resultPanelSprite_->SetColor({0.03f, 0.06f, 0.12f, 0.90f});
-
-	// CLEAR登場時の粒子を生成
-	uint32_t particleTexture = TextureManager::Load("white1x1.png");
-
-	for (int i = 0; i < kClearParticleCount; i++) {
-
-		clearParticles_[i] = Sprite::Create(particleTexture, {634.0f, 354.0f});
-
-		// 粒子の大きさ
-		clearParticles_[i]->SetSize({24.0f, 24.0f});
-
-		// 最初は透明にしておく
-		clearParticles_[i]->SetColor({1.0f, 0.8f, 0.3f, 0.0f});
-
-		// 粒子が飛ぶ方向と速度
-		float angle = (2.0f * std::numbers::pi_v<float> * i) / kClearParticleCount;
-
-		float speed = 5.0f + (i % 4) * 1.5f;
-
-		particleVelocityX_[i] = std::cos(angle) * speed;
-		particleVelocityY_[i] = std::sin(angle) * speed;
-	}
-
-	clearFlashSprite_->SetSize({1280.0f, 720.0f});
-	clearFlashSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
 
 	// リザルト項目名のスプライトを生成
 	resultStageSprite_ = Sprite::Create(TextureManager::Load("result_stage.png"), {400.0f, 100.0f});
@@ -158,394 +127,80 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 		defeatedCountSprites_[i]->SetSize({50.0f, 65.0f});
 	}
-	LoadLayout();
-}
-
-// レイアウトをファイルに保存
-void ClearScene::SaveLayout() {
-
-	std::ofstream file("ClearSceneLayout.txt");
-
-	if (!file.is_open()) {
-		return;
-	}
-
-	file << clearTitleScale_ << '\n';
-
-	for (int i = 0; i < 2; i++) {
-		file << resultStagePosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << resultStageSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << stageNumberPosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << stageNumberSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << resultTimePosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << resultTimeSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 4; i++) {
-		file << timePosition_[i][0] << '\n';
-		file << timePosition_[i][1] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << timeSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << colonPosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << colonPosition2_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << colonSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << resultDefeatedPosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << resultDefeatedSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << defeatedPosition_[i][0] << '\n';
-		file << defeatedPosition_[i][1] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << defeatedSize_[i] << '\n';
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file << pressSpacePosition_[i] << '\n';
-	}
-	for (int i = 0; i < 2; i++) {
-		file << pressSpaceSize_[i] << '\n';
-	}
-}
-
-// 保存したレイアウトを読み込む
-void ClearScene::LoadLayout() {
-
-	std::ifstream file("ClearSceneLayout.txt");
-
-	if (!file.is_open()) {
-		return;
-	}
-
-	file >> clearTitleScale_;
-
-	for (int i = 0; i < 2; i++) {
-		file >> resultStagePosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> resultStageSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> stageNumberPosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> stageNumberSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> resultTimePosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> resultTimeSize_[i];
-	}
-
-	for (int i = 0; i < 4; i++) {
-		file >> timePosition_[i][0];
-		file >> timePosition_[i][1];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> timeSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> colonPosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> colonPosition2_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> colonSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> resultDefeatedPosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> resultDefeatedSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> defeatedPosition_[i][0];
-		file >> defeatedPosition_[i][1];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> defeatedSize_[i];
-	}
-
-	for (int i = 0; i < 2; i++) {
-		file >> pressSpacePosition_[i];
-	}
-	for (int i = 0; i < 2; i++) {
-		file >> pressSpaceSize_[i];
-	}
-}
-
-// レイアウトを初期状態に戻す
-void ClearScene::ResetLayout() {
-
-	clearTitleScale_ = 5.0f;
-
-	resultStagePosition_[0] = 400.0f;
-	resultStagePosition_[1] = 100.0f;
-	resultStageSize_[0] = 160.0f;
-	resultStageSize_[1] = 40.0f;
-
-	stageNumberPosition_[0] = 590.0f;
-	stageNumberPosition_[1] = 80.0f;
-	stageNumberSize_[0] = 100.0f;
-	stageNumberSize_[1] = 100.0f;
-
-	resultTimePosition_[0] = 540.0f;
-	resultTimePosition_[1] = 390.0f;
-	resultTimeSize_[0] = 200.0f;
-	resultTimeSize_[1] = 50.0f;
-
-	timePosition_[0][0] = 480.0f;
-	timePosition_[0][1] = 455.0f;
-	timePosition_[1][0] = 550.0f;
-	timePosition_[1][1] = 455.0f;
-	timePosition_[2][0] = 680.0f;
-	timePosition_[2][1] = 455.0f;
-	timePosition_[3][0] = 750.0f;
-	timePosition_[3][1] = 455.0f;
-	timeSize_[0] = 60.0f;
-	timeSize_[1] = 80.0f;
-
-	colonPosition_[0] = 625.0f;
-	colonPosition_[1] = 480.0f;
-	colonPosition2_[0] = 625.0f;
-	colonPosition2_[1] = 505.0f;
-	colonSize_[0] = 8.0f;
-	colonSize_[1] = 8.0f;
-
-	resultDefeatedPosition_[0] = 480.0f;
-	resultDefeatedPosition_[1] = 545.0f;
-	resultDefeatedSize_[0] = 320.0f;
-	resultDefeatedSize_[1] = 40.0f;
-
-	defeatedPosition_[0][0] = 570.0f;
-	defeatedPosition_[0][1] = 590.0f;
-	defeatedPosition_[1][0] = 640.0f;
-	defeatedPosition_[1][1] = 590.0f;
-	defeatedSize_[0] = 50.0f;
-	defeatedSize_[1] = 50.0f;
-
-	pressSpacePosition_[0] = 448.0f;
-	pressSpacePosition_[1] = 620.0f;
-	pressSpaceSize_[0] = 384.0f;
-	pressSpaceSize_[1] = 60.0f;
+	layout_.Load();
 }
 
 void ClearScene::Update() {
 
-	if (clearFlashTimer_ >= 90 && Input::GetInstance()->PushKey(DIK_SPACE)) {
+	if (clearSceneEffect_.IsFlashFinished() && Input::GetInstance()->PushKey(DIK_SPACE)) {
 		finished_ = true;
 	}
 
 	skyDome_->Update();
 
-#ifdef USE_IMGUI
-	ImGui::Begin("ClearScene Result Editor");
+	layout_.EditWithImGui();
 
-	// CLEARモデル
-	ImGui::DragFloat("CLEAR Scale", &clearTitleScale_, 0.05f, 0.1f, 20.0f);
+	// レイアウト設定を取得
+	const auto& resultStagePosition = layout_.GetResultStagePosition();
+	const auto& resultStageSize = layout_.GetResultStageSize();
+	const auto& stageNumberPosition = layout_.GetStageNumberPosition();
+	const auto& stageNumberSize = layout_.GetStageNumberSize();
 
-	// ステージ表示
-	if (ImGui::CollapsingHeader("Stage", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::DragFloat2("Stage Text Position", resultStagePosition_, 1.0f);
-		ImGui::DragFloat2("Stage Text Size", resultStageSize_, 1.0f);
+	const auto& resultTimePosition = layout_.GetResultTimePosition();
+	const auto& resultTimeSize = layout_.GetResultTimeSize();
+	const auto& timePosition = layout_.GetTimePosition();
+	const auto& timeSize = layout_.GetTimeSize();
 
-		ImGui::DragFloat2("Stage Number Position", stageNumberPosition_, 1.0f);
-		ImGui::DragFloat2("Stage Number Size", stageNumberSize_, 1.0f);
-	}
+	const auto& colonPosition = layout_.GetColonPosition();
+	const auto& colonPosition2 = layout_.GetColonPosition2();
+	const auto& colonSize = layout_.GetColonSize();
 
-	// クリアタイム表示
-	if (ImGui::CollapsingHeader("Time", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::DragFloat2("Time Text Position", resultTimePosition_, 1.0f);
-		ImGui::DragFloat2("Time Text Size", resultTimeSize_, 1.0f);
+	const auto& resultDefeatedPosition = layout_.GetResultDefeatedPosition();
+	const auto& resultDefeatedSize = layout_.GetResultDefeatedSize();
+	const auto& defeatedPosition = layout_.GetDefeatedPosition();
+	const auto& defeatedSize = layout_.GetDefeatedSize();
 
-		for (int i = 0; i < 4; i++) {
-			char label[32];
-			sprintf_s(label, "Time Digit %d Position", i + 1);
-			ImGui::DragFloat2(label, timePosition_[i], 1.0f);
-		}
-
-		ImGui::DragFloat2("Time Digit Size", timeSize_, 1.0f);
-
-		ImGui::DragFloat2("Colon Position", colonPosition_, 1.0f);
-		ImGui::DragFloat2("Colon Second Position", colonPosition2_, 1.0f);
-		ImGui::DragFloat2("Colon Size", colonSize_, 1.0f);
-	}
-
-	// 敵撃破数表示
-	if (ImGui::CollapsingHeader("Defeated", ImGuiTreeNodeFlags_DefaultOpen)) {
-		ImGui::DragFloat2("Defeated Text Position", resultDefeatedPosition_, 1.0f);
-		ImGui::DragFloat2("Defeated Text Size", resultDefeatedSize_, 1.0f);
-
-		ImGui::DragFloat2("Defeated Digit 1 Position", defeatedPosition_[0], 1.0f);
-		ImGui::DragFloat2("Defeated Digit 2 Position", defeatedPosition_[1], 1.0f);
-		ImGui::DragFloat2("Defeated Digit Size", defeatedSize_, 1.0f);
-	}
-
-	// PRESS SPACE
-	if (ImGui::CollapsingHeader("Press Space")) {
-		ImGui::DragFloat2("Press Space Position", pressSpacePosition_, 1.0f);
-		ImGui::DragFloat2("Press Space Size", pressSpaceSize_, 1.0f);
-	}
-
-	// レイアウト保存・読み込み
-	ImGui::Separator();
-
-	if (ImGui::Button("Save Layout")) {
-		SaveLayout();
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Load Layout")) {
-		LoadLayout();
-	}
-
-	ImGui::SameLine();
-
-	if (ImGui::Button("Reset Layout")) {
-		ResetLayout();
-	}
-
-	ImGui::End();
-#endif
+	const auto& pressSpacePosition = layout_.GetPressSpacePosition();
+	const auto& pressSpaceSize = layout_.GetPressSpaceSize();
 
 	// 調整した位置とサイズを反映
-	resultStageSprite_->SetPosition({resultStagePosition_[0], resultStagePosition_[1]});
-	resultStageSprite_->SetSize({resultStageSize_[0], resultStageSize_[1]});
+	resultStageSprite_->SetPosition({resultStagePosition[0], resultStagePosition[1]});
+	resultStageSprite_->SetSize({resultStageSize[0], resultStageSize[1]});
 
-	stageNumberSprite_->SetPosition({stageNumberPosition_[0], stageNumberPosition_[1]});
-	stageNumberSprite_->SetSize({stageNumberSize_[0], stageNumberSize_[1]});
+	stageNumberSprite_->SetPosition({stageNumberPosition[0], stageNumberPosition[1]});
+	stageNumberSprite_->SetSize({stageNumberSize[0], stageNumberSize[1]});
 
-	resultTimeSprite_->SetPosition({resultTimePosition_[0], resultTimePosition_[1]});
-	resultTimeSprite_->SetSize({resultTimeSize_[0], resultTimeSize_[1]});
+	resultTimeSprite_->SetPosition({resultTimePosition[0], resultTimePosition[1]});
+	resultTimeSprite_->SetSize({resultTimeSize[0], resultTimeSize[1]});
 
 	for (int i = 0; i < 4; i++) {
-		timeSprites_[i]->SetPosition({timePosition_[i][0], timePosition_[i][1]});
-		timeSprites_[i]->SetSize({timeSize_[0], timeSize_[1]});
+		timeSprites_[i]->SetPosition({timePosition[i][0], timePosition[i][1]});
+		timeSprites_[i]->SetSize({timeSize[0], timeSize[1]});
 	}
 
-	timeColonSprite_->SetPosition({colonPosition_[0], colonPosition_[1]});
-	timeColonDot2Sprite_->SetPosition({colonPosition2_[0], colonPosition2_[1]});
-	timeColonSprite_->SetSize({colonSize_[0], colonSize_[1]});
-	timeColonDot2Sprite_->SetSize({colonSize_[0], colonSize_[1]});
+	timeColonSprite_->SetPosition({colonPosition[0], colonPosition[1]});
+	timeColonDot2Sprite_->SetPosition({colonPosition2[0], colonPosition2[1]});
+	timeColonSprite_->SetSize({colonSize[0], colonSize[1]});
+	timeColonDot2Sprite_->SetSize({colonSize[0], colonSize[1]});
 
-	resultDefeatedSprite_->SetPosition({resultDefeatedPosition_[0], resultDefeatedPosition_[1]});
-	resultDefeatedSprite_->SetSize({resultDefeatedSize_[0], resultDefeatedSize_[1]});
+	resultDefeatedSprite_->SetPosition({resultDefeatedPosition[0], resultDefeatedPosition[1]});
+	resultDefeatedSprite_->SetSize({resultDefeatedSize[0], resultDefeatedSize[1]});
 
 	for (int i = 0; i < 2; i++) {
-		defeatedCountSprites_[i]->SetPosition({defeatedPosition_[i][0], defeatedPosition_[i][1]});
-		defeatedCountSprites_[i]->SetSize({defeatedSize_[0], defeatedSize_[1]});
+		defeatedCountSprites_[i]->SetPosition({defeatedPosition[i][0], defeatedPosition[i][1]});
+		defeatedCountSprites_[i]->SetSize({defeatedSize[0], defeatedSize[1]});
 	}
 
-	pressSpaceSprite_->SetPosition({pressSpacePosition_[0], pressSpacePosition_[1]});
-	pressSpaceSprite_->SetSize({pressSpaceSize_[0], pressSpaceSize_[1]});
+	pressSpaceSprite_->SetPosition({pressSpacePosition[0], pressSpacePosition[1]});
+	pressSpaceSprite_->SetSize({pressSpaceSize[0], pressSpaceSize[1]});
 
-	// CLEAR文字の登場アニメーション
-	if (clearTitleTimer_ < kClearTitleAnimationFrame) {
-		clearTitleTimer_++;
+	// クリア演出の更新
+	float clearTitleScale = clearSceneEffect_.Update(layout_.GetClearTitleScale());
 
-		float t = static_cast<float>(clearTitleTimer_) / kClearTitleAnimationFrame;
-
-		float scale = 5.0f;
-
-		if (t < 0.8f) {
-			// 最初は勢いよく大きくする
-			float ease = t / 0.8f;
-			scale = 0.1f + 5.4f * ease;
-		} else {
-			// 最後に少し縮んで落ち着く
-			float ease = (t - 0.8f) / 0.2f;
-			scale = 5.5f - 0.5f * ease;
-		}
-
-		worldTransformTitle_.scale_ = {scale, scale, scale};
-	}
-
-	if (clearTitleTimer_ >= kClearTitleAnimationFrame) {
-		worldTransformTitle_.scale_ = {clearTitleScale_, clearTitleScale_, clearTitleScale_};
-	}
-
-	// CLEAR登場後に粒子を発生させる
-	if (clearTitleTimer_ >= kClearTitleAnimationFrame && !clearParticlesStarted_) {
-		clearParticlesStarted_ = true;
-	}
-
-	// 粒子の移動と消滅
-	if (clearParticlesStarted_ && clearParticleTimer_ < 60) {
-
-		clearParticleTimer_++;
-
-		for (int i = 0; i < kClearParticleCount; i++) {
-
-			float x = 640.0f + particleVelocityX_[i] * clearParticleTimer_;
-			float y = 360.0f + particleVelocityY_[i] * clearParticleTimer_;
-
-			clearParticles_[i]->SetPosition({x, y});
-
-			float alpha = 1.0f - static_cast<float>(clearParticleTimer_) / 60.0f;
-
-			float size = 24.0f * alpha;
-
-			clearParticles_[i]->SetSize({size, size});
-			clearParticles_[i]->SetColor({1.0f, 0.8f, 0.3f, alpha});
-		}
-	}
-
-	// CLEAR登場後にフラッシュを開始
-	if (clearTitleTimer_ >= kClearTitleAnimationFrame && !clearFlashStarted_) {
-		clearFlashStarted_ = true;
-	}
-
-	// クリア時のフラッシュ
-	if (clearFlashStarted_ && clearFlashTimer_ < 90) {
-
-		clearFlashTimer_++;
-
-		float alpha = 0.0f;
-
-		// 最初の15フレームで白い光を消す
-		if (clearFlashTimer_ <= 15) {
-			alpha = 1.0f - static_cast<float>(clearFlashTimer_) / 15.0f;
-		}
-
-		clearFlashSprite_->SetColor({1.0f, 1.0f, 1.0f, alpha});
-	}
+	worldTransformTitle_.scale_ = {clearTitleScale, clearTitleScale, clearTitleScale};
 
 	// クリア演出が終わったらPRESS SPACEを表示
-	if (clearFlashTimer_ >= 90) {
+	if (clearSceneEffect_.IsFlashFinished()) {
 		pressSpaceSprite_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
 	}
 
@@ -564,14 +219,8 @@ void ClearScene::Draw() {
 
 	Sprite::PreDraw();
 
-	clearFlashSprite_->Draw();
-
-	// CLEAR登場時の粒子を描画
-	if (clearParticlesStarted_) {
-		for (int i = 0; i < kClearParticleCount; i++) {
-			clearParticles_[i]->Draw();
-		}
-	}
+	// クリア演出の描画
+	clearSceneEffect_.Draw();
 
 	resultPanelSprite_->Draw();
 
@@ -619,7 +268,6 @@ ClearScene::~ClearScene() {
 		delete defeatedCountSprites_[i];
 	}
 
-	delete clearFlashSprite_;
 	delete resultPanelSprite_;
 
 	delete resultStageSprite_;

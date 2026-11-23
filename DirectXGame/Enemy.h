@@ -5,8 +5,6 @@
 class Player;
 class MapChipField;
 
-enum class EnemyState { Moving, Waiting };
-
 /// <summary>
 /// 敵
 /// </summary>
@@ -31,11 +29,8 @@ public:
 	/// </summary>
 	void Draw();
 
-	// ワールド座標を取得
-	KamataEngine::Vector3 GetWorldPosition();
-
-	// AABBを取得
-	AABB GetAABB();
+	KamataEngine::Vector3 GetWorldPosition() const;
+	AABB GetAABB() const;
 
 	// 衝突応答
 	void OnCollision(const Player* player);
@@ -46,9 +41,14 @@ public:
 	// デスフラグのgetter
 	bool IsDead() const { return isDead_; }
 
+private:
+
+	// 敵の剣との当たり判定
 	void CheckHitByPlayerSword(const Player* player);
 
-private:
+	// 敵の行動状態
+	enum class EnemyState { Moving, Waiting };
+
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
 

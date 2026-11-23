@@ -1,4 +1,6 @@
 #pragma once
+#include "MapEditor.h"
+#include "StagePlacementData.h"
 #include "CameraController.h"
 #include "KamataEngine.h"
 #include "Player.h"
@@ -6,6 +8,21 @@
 #include "Enemy.h"
 #include "MapChipField.h"
 #include "SkyDome.h"
+#include "GameOverEffect.h"
+#include "GameClearEffect.h"
+#include "GameStartEffect.h"
+#include "HpBar.h"
+#include "Goal.h"
+#include "StageDataLoader.h"
+#include "StageMapLoader.h"
+#include "StagePlacementDataSaver.h"
+#include "BlockManager.h"
+#include "EnemyManager.h"
+#include "CollisionManager.h"
+
+#ifdef USE_IMGUI
+#include "MapEditorController.h"
+#endif
 
 enum class GameResult { None, Clear, GameOver };
 
@@ -35,77 +52,50 @@ public:
 	// 敵の撃破数を取得
 	int GetDefeatedEnemyCount() const { return defeatedEnemyCount_; }
 
+private:
+
+	// ============================
+	// 内部処理
+	// ============================
+
+	// ブロック生成
 	void GenerateBlocks();
 
-	// 敵を配置データから生成する
+	// 敵生成
 	void GenerateEnemies();
 
-	// ステージごとの敵配置を設定する
-	void SetEnemyPositionsForStage();
-
-	// 全ての当たり判定を行う
-	void CheckAllCollisions();
-
-private:
 	// 終了フラグ
 	bool finished_ = false;
 
 #ifdef USE_IMGUI
 
-	// マップエディタで配置するチップ
-	int editMapType_ = 1; // 初期状態はブロック
+	// マップエディタ
+	MapEditor mapEditor_;
 
-	// エディタの編集モード
-	int editorMode_ = 0; // 0: マップ編集、1: 敵配置、2: プレイヤー配置
-
-	// マップ編集中かどうか
-	bool isMapEditing_ = true;
-
-	// マップエディタの拡大・縮小
-	float mapCellSize_ = 8.0f;
-
-	// 保存完了メッセージ
-	int saveMessageTimer_ = 0;
-
-	// 範囲選択モード
-	bool isRangeSelectMode_ = false;
-	bool isSelectingMapRange_ = false;
-
-	// 範囲選択の開始位置と終了位置
-	int rangeStartX_ = 0;
-	int rangeStartY_ = 0;
-	int rangeEndX_ = 0;
-	int rangeEndY_ = 0;
+	MapEditorController mapEditorController_;
 
 #endif
 
-	// 敵の配置位置
-	struct EnemyMapPosition {
-		int x;
-		int y;
-	};
+	// ステージの配置データ
+	StagePlacementData stagePlacementData_;
 
-	std::vector<EnemyMapPosition> enemyMapPositions_;
+	StagePlacementDataSaver stagePlacementDataSaver_;
+	StageDataLoader stageDataLoader_;
+	StageMapLoader stageMapLoader_;
 
-	// プレイヤーの配置位置
-	int playerMapX_ = 1;
-	int playerMapY_ = 12;
+	Goal goal_;
 
-	// ステージごとのプレイヤー配置を読み込む
-	void LoadPlayerPositionForStage();
+	BlockManager blockManager_;
+
+	EnemyManager enemyManager_;
+
+	CollisionManager collisionManager_;
 
 	// カメラ
 	KamataEngine::Camera camera_;
 
 	// ブロックモデルデータ
-	KamataEngine::Model* modelBlock_ = nullptr;
-
-	// ゴールの旗
-	KamataEngine::WorldTransform worldTransformGoalPole_;
-	KamataEngine::WorldTransform worldTransformGoalFlag_;
-	KamataEngine::Vector3 goalPosition_;
-
-	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransformBlocks_;
+	KamataEngine::Model* modelBlock_ = nullptr;	
 
 	// マップチップフィールド
 	MapChipField* mapChipField_ = nullptr;
@@ -116,19 +106,9 @@ private:
 	// 3Dモデルデータ
 	KamataEngine::Model* modelPlayer_ = nullptr;
 
-	std::list<Enemy*> enemies_;
-
-	KamataEngine::Model* modelEnemy_ = nullptr;
-
 	CameraController* CController_ = nullptr;
 
 	KamataEngine::Model* swordModel_ = nullptr;
-
-	KamataEngine::Sprite* hpBarBg_ = nullptr;
-	KamataEngine::Sprite* hpBarFg_ = nullptr;
-
-	uint32_t hpBarBgTex_ = 0;
-	uint32_t hpBarFgTex_ = 0;
 
 	SkyDome* skyDome_ = nullptr;
 
@@ -141,18 +121,16 @@ private:
 	GameResult result_ = GameResult::None;
 
 	// ゲームオーバー演出
-	bool isGameOverPlaying_ = false;
-	int gameOverTimer_ = 0;
-	static constexpr int kGameOverFrame = 90;
-
-	static constexpr int kGameOverFlashFrame = 10;
+	GameOverEffect gameOverEffect_;
 
 	// ゲームクリア演出
-	bool isGameClearPlaying_ = false;
-	int gameClearTimer_ = 0;
+	GameClearEffect gameClearEffect_;
 
-	// クリア演出の時間
-	static constexpr int kGameClearFrame = 120;
+	// ゲーム開始演出
+	GameStartEffect gameStartEffect_;
+
+	// HPバー関連の処理
+	HpBar hpBar_;
 
 	// ゲームプレイ時間
 	int playTimer_ = 0;
@@ -160,42 +138,5 @@ private:
 	// 敵の撃破数
 	int defeatedEnemyCount_ = 0;
 
-	// ゲームオーバー開始時のカメラ画角
-	float gameOverStartFovY_ = 0.0f;
-
-	// カメラズームにかける時間
-	static constexpr int kGameOverZoomFrame = 30;
-
-	// 画面を暗くするスプライト
-	KamataEngine::Sprite* gameOverFadeSprite_ = nullptr;
-
-	// ゲームクリア演出用スプライト
-	KamataEngine::Sprite* gameClearSprite_ = nullptr;
-	KamataEngine::Sprite* gameClearFlashSprite_ = nullptr;
-
 	KamataEngine::Sprite* aSprite_ = nullptr;
-
-	// ゲーム開始演出
-	int startTimer_ = 0;
-
-	// ステージ確認1秒 + カウントダウン3秒 + GO! 0.5秒
-	static constexpr int kStagePreviewFrame = 60;
-	static constexpr int kCountdownFrame = 180;
-	static constexpr int kGoFrame = 30;
-	static constexpr int kGameStartFrame = kStagePreviewFrame + kCountdownFrame + kGoFrame;
-
-	// カウントダウン表示用
-	KamataEngine::Sprite* countdown3Sprite_ = nullptr;
-	KamataEngine::Sprite* countdown2Sprite_ = nullptr;
-	KamataEngine::Sprite* countdown1Sprite_ = nullptr;
-	KamataEngine::Sprite* countdownGoSprite_ = nullptr;
-
-	int countdownNumber_ = 0;
-
-	// ゴールの旗の配置位置
-	int flagMapX_ = 97;
-	int flagMapY_ = 12;
-
-	// ステージごとの旗配置を読み込む
-	void LoadFlagPositionForStage();
 };

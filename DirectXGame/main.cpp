@@ -1,222 +1,37 @@
-#include "ClearScene.h"
-#include "Fade.h"
-#include "GameOverScene.h"
-#include "GameScene.h"
+
 #include "KamataEngine.h"
-#include "TitleScene.h"
+#include "SceneManager.h"
 #include <Windows.h>
 
 using namespace KamataEngine;
 
-GameScene* gameScene = nullptr;
-TitleScene* titleScene = nullptr;
-ClearScene* clearScene = nullptr;
-GameOverScene* gameOverScene = nullptr;
-
-int currentStage = 1;
-
-Fade fade;
-
-// シーンの表示時間（秒）
-const float kTitleDisplayTime = 1.5f;
-const float kGameDisplayTime = 2.0f;
-
-bool isChangingScene = false;
-bool sceneChanged = false;
-
-// シーン（型）
-enum class Scene {
-	kUnknown = 0,
-	kTitle,
-	kGame,
-	kClear,
-	kGameOver,
-};
-
-// 現在シーン（型）
-Scene scene = Scene::kUnknown;
-
-static bool IsSceneFinished() {
-	switch (scene) {
-	case Scene::kTitle:
-		return titleScene->IsFinished();
-
-	case Scene::kGame:
-		return gameScene->IsFinished();
-
-	case Scene::kClear:
-		return clearScene->IsFinished();
-
-	case Scene::kGameOver:
-		return gameOverScene->IsFinished();
-
-	default:
-		return false;
-	}
-}
-
-
-static void ChangeSceneNow() {
-	switch (scene) {
-	case Scene::kTitle:
-
-		currentStage = 1;
-
-		scene = Scene::kGame;
-		delete titleScene;
-		titleScene = nullptr;
-
-		gameScene = new GameScene;
-		gameScene->Initialize(currentStage);
-		break;
-
-	case Scene::kGame:
-		if (gameScene->GetResult() == GameResult::Clear) {
-
-			// ゲームのプレイ時間を取得
-			int clearPlayTimer = gameScene->GetPlayTimer();
-
-			// 敵の撃破数を取得
-			int clearDefeatedEnemyCount = gameScene->GetDefeatedEnemyCount();
-
-			// ゲームシーンを削除
-			delete gameScene;
-			gameScene = nullptr;
-
-			// クリアリザルト画面へ
-			scene = Scene::kClear;
-			clearScene = new ClearScene;
-			clearScene->Initialize(currentStage, clearPlayTimer, clearDefeatedEnemyCount);
-
-		} else if (gameScene->GetResult() == GameResult::GameOver) {
-
-			scene = Scene::kGameOver;
-			delete gameScene;
-			gameScene = nullptr;
-
-			gameOverScene = new GameOverScene;
-			gameOverScene->Initialize();
-		}
-		break;
-
-	case Scene::kClear:
-
-		// リザルト画面を削除
-		delete clearScene;
-		clearScene = nullptr;
-
-		// クリア後はタイトルへ戻る
-		currentStage = 1;
-
-		scene = Scene::kTitle;
-		titleScene = new TitleScene;
-		titleScene->Initialize();
-		break;
-
-	case Scene::kGameOver:
-		delete gameOverScene;
-		gameOverScene = nullptr;
-
-		// ゲームオーバーになったステージから再挑戦
-		scene = Scene::kGame;
-		gameScene = new GameScene;
-		gameScene->Initialize(currentStage);
-		break;
-
-	default:
-		break;
-	}
-}
-
-static void ChangeScene() {
-	// シーン切り替えを開始
-	if (!isChangingScene && IsSceneFinished()) {
-		isChangingScene = true;
-		sceneChanged = false;
-		fade.StartFadeOut();
-	}
-
-	// 画面が完全に黒くなったらシーンを切り替える
-	if (isChangingScene && !sceneChanged && fade.IsFadeOutFinished()) {
-		ChangeSceneNow();
-		fade.StartFadeIn();
-		sceneChanged = true;
-	}
-
-	// フェードインが終わったら通常状態に戻す
-	if (isChangingScene && sceneChanged && fade.IsFadeInFinished()) {
-		isChangingScene = false;
-		sceneChanged = false;
-	}
-}
-
-static void UpdateScene() {
-	switch (scene) {
-	case Scene::kTitle:
-		titleScene->Update();
-		break;
-	case Scene::kGame:
-		gameScene->Update();
-		break;
-	case Scene::kClear:
-		clearScene->Update();
-		break;
-	case Scene::kGameOver:
-		gameOverScene->Update();
-		break;
-	}
-}
-
-static void DrawScene() {
-	switch (scene) {
-	case Scene::kTitle:
-		titleScene->Draw();
-		break;
-	case Scene::kGame:
-		gameScene->Draw();
-		break;
-	case Scene::kClear:
-		clearScene->Draw();
-		break;
-	case Scene::kGameOver:
-		gameOverScene->Draw();
-		break;
-	}
-}
-
-// Windowsアプリでのエントリーポイント(main関数)
+// Windowsアプリでのエントリーポイント
 int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 
 	// エンジンの初期化
 	Initialize(L"LE3C_04_イケダ_シュウヤ_エアリーナイト");
-	fade.Initialize();
 
 	// DirectXCommonインスタンスの取得
 	DirectXCommon* dxCommon = DirectXCommon::GetInstance();
 
-	// 最初のシーンの初期化
-	scene = Scene::kTitle;
-	titleScene = new TitleScene;
-	titleScene->Initialize();
+	// シーン管理クラス
+	SceneManager sceneManager;
+	sceneManager.Initialize();
 
 	// メインループ
 	while (true) {
+
 		// エンジンの更新
 		if (Update()) {
 			break;
 		}
 
-		// フェード更新
-		fade.Update();
-
-		ChangeScene();
-
 #ifdef USE_IMGUI
 		KamataEngine::ImGuiManager::GetInstance()->Begin();
 #endif
 
-		// 現在シーン更新
-		UpdateScene();
+		// シーン更新
+		sceneManager.Update();
 
 #ifdef USE_IMGUI
 		KamataEngine::ImGuiManager::GetInstance()->End();
@@ -225,11 +40,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		// 描画開始
 		dxCommon->PreDraw();
 
-		// 現在シーンの描画
-		DrawScene();
-
-		// フェード描画
-		fade.Draw();
+		// シーン描画
+		sceneManager.Draw();
 
 #ifdef USE_IMGUI
 		KamataEngine::ImGuiManager::GetInstance()->Draw();
@@ -239,10 +51,8 @@ int WINAPI WinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int) {
 		dxCommon->PostDraw();
 	}
 
-	delete titleScene;
-	delete gameScene;
-	delete clearScene;
-	delete gameOverScene;
+	// シーンの終了処理
+	sceneManager.Finalize();
 
 	// エンジンの終了処理
 	Finalize();
