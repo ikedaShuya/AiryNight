@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version='1.0' encoding='utf-8'?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <Filter Include="ソース ファイル">
@@ -136,6 +136,12 @@
       <Filter>ソース ファイル\06_Effect</Filter>
     </ClCompile>
     <ClCompile Include="ClearSceneEffect.cpp">
+      <Filter>ソース ファイル\06_Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Particle.cpp">
+      <Filter>ソース ファイル\06_Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="ParticleManager.cpp">
       <Filter>ソース ファイル\06_Effect</Filter>
     </ClCompile>
     <ClCompile Include="HpBar.cpp">
@@ -289,6 +295,12 @@
       <Filter>ヘッダー ファイル\03_State</Filter>
     </ClInclude>
     <ClInclude Include="Effect.h">
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Particle.h">
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="ParticleManager.h">
       <Filter>ヘッダー ファイル\06_Effect</Filter>
     </ClInclude>
     <ClInclude Include="EnemyState.h">
