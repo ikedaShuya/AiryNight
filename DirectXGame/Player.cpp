@@ -7,6 +7,63 @@
 
 using namespace KamataEngine;
 
+// 通常状態
+PlayerStateType PlayerNormalState::Update(Player& player) {
+
+	if (player.hp_ <= 0) {
+		return PlayerStateType::kDead;
+	}
+
+	player.ProcessAttack();
+
+	if (player.isAttacking_) {
+		return PlayerStateType::kAttack;
+	}
+
+	return PlayerStateType::kNormal;
+}
+
+// 攻撃状態
+PlayerStateType PlayerAttackState::Update(Player& player) {
+
+	if (player.hp_ <= 0) {
+		return PlayerStateType::kDead;
+	}
+
+	player.ProcessAttack();
+
+	if (!player.isAttacking_) {
+		return PlayerStateType::kNormal;
+	}
+
+	return PlayerStateType::kAttack;
+}
+
+// 死亡状態
+PlayerStateType PlayerDeadState::Update(Player& player) {
+	(void)player;
+	return PlayerStateType::kDead;
+}
+
+void Player::ChangeState(PlayerStateType stateType) {
+
+	switch (stateType) {
+	case PlayerStateType::kNormal:
+		state_ = std::make_unique<PlayerNormalState>();
+		break;
+
+	case PlayerStateType::kAttack:
+		state_ = std::make_unique<PlayerAttackState>();
+		break;
+
+	case PlayerStateType::kDead:
+		state_ = std::make_unique<PlayerDeadState>();
+		break;
+	}
+
+	stateType_ = stateType;
+}
+
 void Player::Initialize(Model* model, Model* swordModel, Camera* camera, const Vector3& position) { // NULLポインタチェック
 	assert(model);
 	assert(swordModel);
@@ -26,29 +83,53 @@ void Player::Initialize(Model* model, Model* swordModel, Camera* camera, const V
 	swordWorldTransform_.translation_ = position;
 	worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
 	swordWorldTransform_.scale_ = swordScale_;
+
+	ChangeState(PlayerStateType::kNormal);
 }
 
 void Player::Update() {
+
+	if (!state_) {
+		ChangeState(PlayerStateType::kNormal);
+	}
+
+	// 死亡判定
+	if (hp_ <= 0 && stateType_ != PlayerStateType::kDead) {
+		ChangeState(PlayerStateType::kDead);
+	}
+
+	// 死亡状態
+	if (stateType_ == PlayerStateType::kDead) {
+		velocity_ = {};
+		isAttacking_ = false;
+
+		WorldTransformUpdate(worldTransform_);
+		WorldTransformUpdate(swordWorldTransform_);
+		return;
+	}
 
 	// ゲーム開始演出中は操作・物理処理を停止する
 	if (!isControllable_) {
 		velocity_ = {};
 		isAttacking_ = false;
 
-		// ワールド変換を更新
 		WorldTransformUpdate(worldTransform_);
 		WorldTransformUpdate(swordWorldTransform_);
 		return;
+	}
+
+	// 状態更新
+	PlayerStateType nextState = state_->Update(*this);
+
+	if (nextState != stateType_) {
+		ChangeState(nextState);
 	}
 
 	if (damageCoolTime_ > 0) {
 		damageCoolTime_--;
 	}
 
-	// 近接攻撃処理
-	ProcessAttack();
-
-	float swordOffsetX = 1.3f; // お好みの距離に調整してください
+	float swordOffsetX = 1.3f;
 	swordWorldTransform_.translation_ = worldTransform_.translation_ + Vector3((lrDirection_ == LRDirection::kRight ? 1 : -1) * swordOffsetX, 0.0f, 0.0f);
 
 	// ジャンプ入力をバッファに保存
@@ -64,7 +145,6 @@ void Player::Update() {
 
 	// 衝突判定を初期化
 	CollisionMapInfo collisionMapInfo;
-	// 移動量に速度の値をコピー
 	collisionMapInfo.move = velocity_;
 
 	// マップ衝突チェック
@@ -87,15 +167,13 @@ void Player::Update() {
 
 		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
 
-		// 左右の自キャラ角度テーブル
 		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-		// 状態に応じた角度を取得する
+
 		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-		// 自キャラの角度を設定する
+
 		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
 	}
 
-	// 行列を定数バッファに転送
 	WorldTransformUpdate(worldTransform_);
 	WorldTransformUpdate(swordWorldTransform_);
 }

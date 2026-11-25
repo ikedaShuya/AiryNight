@@ -2,6 +2,8 @@
 #include "KamataEngine.h"
 #include "Math.h"
 #include "Character.h"
+#include "EnemyState.h"
+#include <memory>
 
 class Player;
 class MapChipField;
@@ -47,8 +49,14 @@ private:
 	// 敵の剣との当たり判定
 	void CheckHitByPlayerSword(const Player* player);
 
-	// 敵の行動状態
-	enum class EnemyState { Moving, Waiting };
+	// StateクラスからEnemyのメンバにアクセスする
+	friend class EnemyMovingState;
+	friend class EnemyWaitingState;
+	friend class EnemyFallingState;
+	friend class EnemyDeadState;
+
+	// 状態変更
+	void ChangeState(std::unique_ptr<EnemyState> newState);
 
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
@@ -117,8 +125,10 @@ private:
 
 	static inline const float kKnockbackPower = 0.25f;
 
-	EnemyState state_ = EnemyState::Moving;
-	float stateTimer_ = 0.0f; // 状態継続時間カウント
+	// 現在の状態
+	std::unique_ptr<EnemyState> state_;
+
+	float stateTimer_ = 0.0f;
 
 	const float moveDuration_ = 2.0f; // 2秒間移動
 	const float waitDuration_ = 1.0f; // 1秒間停止

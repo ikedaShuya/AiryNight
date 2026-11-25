@@ -291,11 +291,13 @@
     <ClInclude Include="Enemy.h" />
     <ClInclude Include="CameraController.h" />
     <ClInclude Include="EnemyManager.h" />
+    <ClInclude Include="EnemyState.h" />
     <ClInclude Include="Fade.h" />
     <ClInclude Include="GameClearEffect.h" />
     <ClInclude Include="GameOverEffect.h" />
     <ClInclude Include="GameOverScene.h" />
     <ClInclude Include="GameScene.h" />
+    <ClInclude Include="GameSceneState.h" />
     <ClInclude Include="GameStartEffect.h" />
     <ClInclude Include="Goal.h" />
     <ClInclude Include="HpBar.h" />
@@ -304,6 +306,7 @@
     <ClInclude Include="MapEditorController.h" />
     <ClInclude Include="Math.h" />
     <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerState.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="SceneManager.h" />
     <ClInclude Include="SkyDome.h" />
@@ -312,6 +315,7 @@
     <ClInclude Include="StagePlacementData.h" />
     <ClInclude Include="StagePlacementDataSaver.h" />
     <ClInclude Include="TitleScene.h" />
+    <ClInclude Include="TitleSceneState.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

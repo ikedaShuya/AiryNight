@@ -26,6 +26,9 @@
 
 #include "Scene.h"
 
+#include "GameSceneState.h"
+#include <memory>
+
 enum class GameResult { None, Clear, GameOver };
 
 /// <summary>
@@ -59,6 +62,14 @@ private:
 	// ============================
 	// 内部処理
 	// ============================
+
+	friend class GameSceneStartState;
+	friend class GameScenePlayingState;
+	friend class GameSceneGameOverState;
+	friend class GameSceneClearState;
+
+	// 状態変更
+	void ChangeState(std::unique_ptr<GameSceneState> newState);
 
 	// ブロック生成
 	void GenerateBlocks();
@@ -144,4 +155,10 @@ private:
 	int defeatedEnemyCount_ = 0;
 
 	KamataEngine::Sprite* aSprite_ = nullptr;
+
+	// 現在のゲームシーンの状態
+	std::unique_ptr<GameSceneState> state_;
+
+	// 次に切り替える状態
+	std::unique_ptr<GameSceneState> nextState_;
 };

@@ -2,6 +2,8 @@
 #include "KamataEngine.h"
 #include "Math.h"
 #include "Character.h"
+#include "PlayerState.h"
+#include <memory>
 
 class MapChipField;
 
@@ -79,6 +81,12 @@ public:
 	}
 
 private:
+
+	friend class PlayerNormalState;
+	friend class PlayerAttackState;
+	friend class PlayerDeadState;
+
+	void ChangeState(PlayerStateType stateType);
 
 	// ============================
 	// 内部処理
@@ -257,4 +265,8 @@ private:
 
 	// 操作可能か
 	bool isControllable_ = true;
+
+	// 現在の状態
+	std::unique_ptr<PlayerState> state_;
+	PlayerStateType stateType_ = PlayerStateType::kNormal;
 };

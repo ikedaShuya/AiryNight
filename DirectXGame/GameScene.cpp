@@ -7,6 +7,92 @@
 
 using namespace KamataEngine;
 
+// ゲーム開始演出中
+void GameSceneStartState::Update(GameScene& gameScene) {
+
+	gameScene.gameStartEffect_.Update();
+
+	gameScene.skyDome_->Update();
+	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
+
+	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
+
+	gameScene.CController_->Update();
+	gameScene.blockManager_.Update();
+	gameScene.player_->Update();
+
+	// 演出が終わったら操作を許可してプレイ状態へ
+	if (gameScene.gameStartEffect_.IsFinished()) {
+		gameScene.player_->SetControllable(true);
+		gameScene.playTimer_++;
+		gameScene.ChangeState(std::make_unique<GameScenePlayingState>());
+	}
+}
+
+// ゲームプレイ中
+void GameScenePlayingState::Update(GameScene& gameScene) {
+
+	// プレイヤー死亡判定
+	if (gameScene.player_->GetHp() <= 0) {
+		gameScene.gameOverEffect_.Start(gameScene.camera_);
+		gameScene.player_->SetControllable(false);
+		gameScene.ChangeState(std::make_unique<GameSceneGameOverState>());
+		return;
+	}
+
+	// ゴール判定
+	Vector3 playerPosition = gameScene.player_->GetWorldPosition();
+
+	if (gameScene.goal_.IsPlayerInGoalRange(playerPosition)) {
+		gameScene.gameClearEffect_.Start();
+		gameScene.player_->SetControllable(false);
+		gameScene.ChangeState(std::make_unique<GameSceneClearState>());
+		return;
+	}
+
+	gameScene.playTimer_++;
+
+	gameScene.skyDome_->Update();
+	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
+
+	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
+
+	gameScene.CController_->Update();
+	gameScene.blockManager_.Update();
+
+	gameScene.player_->Update();
+
+	gameScene.enemyManager_.Update(gameScene.player_);
+	gameScene.collisionManager_.CheckAllCollisions(gameScene.player_, gameScene.enemyManager_.GetEnemies());
+}
+
+// ゲームオーバー演出中
+void GameSceneGameOverState::Update(GameScene& gameScene) {
+
+	if (gameScene.gameOverEffect_.Update(gameScene.camera_)) {
+		gameScene.result_ = GameResult::GameOver;
+		gameScene.finished_ = true;
+	}
+}
+
+// ゲームクリア演出中
+void GameSceneClearState::Update(GameScene& gameScene) {
+
+	if (gameScene.gameClearEffect_.Update()) {
+		gameScene.result_ = GameResult::Clear;
+		gameScene.finished_ = true;
+	}
+}
+
+// 状態変更
+void GameScene::ChangeState(std::unique_ptr<GameSceneState> newState) {
+	if (!state_) {
+		state_ = std::move(newState);
+	} else {
+		nextState_ = std::move(newState);
+	}
+}
+
 void GameScene::Initialize(int stageNumber) {
 
 	stageNumber_ = stageNumber;
@@ -84,6 +170,9 @@ void GameScene::Initialize(int stageNumber) {
 	for (int i = 0; i < 3; i++) {
 		effects_[i]->Initialize();
 	}
+
+	// ゲーム開始状態にする
+	ChangeState(std::make_unique<GameSceneStartState>());
 }
 
 void GameScene::Update() {
@@ -100,81 +189,14 @@ void GameScene::Update() {
 	}
 #endif
 
-	// ゲームオーバー演出中
-	if (gameOverEffect_.IsPlaying()) {
-
-		// ゲームオーバー演出を更新
-		if (gameOverEffect_.Update(camera_)) {
-			result_ = GameResult::GameOver;
-			finished_ = true;
-		}
-
-		return;
+	// 現在の状態を更新
+	if (state_) {
+		state_->Update(*this);
 	}
 
-	// ゲームクリア演出中
-	if (gameClearEffect_.IsPlaying()) {
-		if (gameClearEffect_.Update()) {
-			result_ = GameResult::Clear;
-			finished_ = true;
-		}
-
-		return;
-	}
-
-	// プレイヤー死亡判定
-	if (player_->GetHp() <= 0) {
-
-		gameOverEffect_.Start(camera_);
-
-		// プレイヤーの操作を禁止
-		player_->SetControllable(false);
-
-		return;
-	}
-
-	// ゴール判定
-	KamataEngine::Vector3 playerPosition = player_->GetWorldPosition();
-
-	if (goal_.IsPlayerInGoalRange(playerPosition)) {
-		gameClearEffect_.Start();
-		player_->SetControllable(false);
-		return;
-	}
-
-	gameStartEffect_.Update();
-
-	// 演出が終わったら操作を許可
-	if (gameStartEffect_.IsFinished()) {
-		player_->SetControllable(true);
-	}
-
-	// ゲーム開始後のプレイ時間を計測
-	if (gameStartEffect_.IsFinished()) {
-		playTimer_++;
-	}
-
-	skyDome_->Update();
-
-	hpBar_.Update(player_->GetHp(), player_->GetMaxHp());
-
-	// デスフラグの立った敵を削除
-	defeatedEnemyCount_ += enemyManager_.RemoveDeadEnemies();
-
-	CController_->Update();
-
-	// ブロックの更新
-	blockManager_.Update();
-
-	player_->Update();
-
-	// ゲーム開始演出が終わってから敵を動かす
-	if (gameStartEffect_.IsFinished()) {
-
-		enemyManager_.Update(player_);
-
-		// 全ての当たり判定を行う
-		collisionManager_.CheckAllCollisions(player_, enemyManager_.GetEnemies());
+	// 状態更新が終わってから状態を切り替える
+	if (nextState_) {
+		state_ = std::move(nextState_);
 	}
 }
 

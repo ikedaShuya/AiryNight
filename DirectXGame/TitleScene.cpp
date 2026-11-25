@@ -4,6 +4,33 @@
 
 using namespace KamataEngine;
 
+// タイトル待機状態
+void TitleSceneIdleState::Update(TitleScene& titleScene) {
+
+	// Spaceキーでゲーム開始状態へ
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		titleScene.ChangeState(std::make_unique<TitleSceneStartingState>());
+		return;
+	}
+}
+
+// ゲーム開始状態
+void TitleSceneStartingState::Update(TitleScene& titleScene) {
+
+	titleScene.startTimer_ += 0.02f;
+
+	// カメラを前進させる
+	titleScene.camera_.translation_.z += titleScene.startTimer_ * 0.1f;
+
+	// 演出終了
+	if (titleScene.startTimer_ >= 1.5f) {
+		titleScene.finished_ = true;
+	}
+}
+
+// 状態変更
+void TitleScene::ChangeState(std::unique_ptr<TitleSceneState> newState) { nextState_ = std::move(newState); }
+
 void TitleScene::Initialize() {
 
 	modelTitle_ = Model::CreateFromOBJ("title", true);
@@ -21,48 +48,41 @@ void TitleScene::Initialize() {
 	// PRESS SPACE
 	uint32_t textureHandle = TextureManager::Load("pressSpace.png");
 	pressSpaceSprite_ = Sprite::Create(textureHandle, {384.0f, 560.0f});
+
+	// タイトル待機状態にする
+	state_ = std::make_unique<TitleSceneIdleState>();
 }
 
 void TitleScene::Update() {
 
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		isStarting_ = true;
-	}
-
+	// タイトルの上下移動・回転
 	titleTimer_ += 0.03f;
-
-	// タイトルを上下に動かす
 	worldTransformTitle_.translation_.y = sin(titleTimer_) * 0.3f;
-
-	// タイトルを少し回転させる
 	worldTransformTitle_.rotation_.y += 0.003f;
 
-	// カメラを前後・左右に動かす
+	// カメラの基本的な移動
 	cameraTimer_ += 0.02f;
-
 	camera_.translation_.z = -10.0f + sin(cameraTimer_) * 2.0f;
 	camera_.translation_.x = sin(cameraTimer_ * 0.5f) * 0.5f;
 
-	// ゲーム開始演出
-	if (isStarting_) {
-		startTimer_ += 0.02f;
+	// 現在の状態を更新
+	if (state_) {
+		state_->Update(*this);
+	}
 
-		camera_.translation_.z += startTimer_ * 0.1f;
-
-		if (startTimer_ >= 1.5f) {
-			finished_ = true;
-		}
+	// 状態を切り替える
+	if (nextState_) {
+		state_ = std::move(nextState_);
 	}
 
 	camera_.UpdateMatrix();
 
-	// タイトル画面だけ空をゆっくり回転
+	// 空をゆっくり回転
 	skyRotation_ += 0.001f;
 	skyDome_->SetRotation(skyRotation_);
 
 	// PRESS SPACE用タイマー
 	pressSpaceTimer_ += 1.0f;
-
 	if (pressSpaceTimer_ >= 120.0f) {
 		pressSpaceTimer_ = 0.0f;
 	}
