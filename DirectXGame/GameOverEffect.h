@@ -2,6 +2,8 @@
 
 #include "KamataEngine.h"
 #include "Effect.h"
+#include "GameOverEffectState.h"
+#include <memory>
 
 class GameOverEffect : public Effect {
 public:
@@ -24,6 +26,15 @@ public:
 	~GameOverEffect() override;
 
 private:
+
+	friend class GameOverEffectFlashState;
+	friend class GameOverEffectFadeState;
+
+	void ChangeState(std::unique_ptr<GameOverEffectState> newState);
+
+	std::unique_ptr<GameOverEffectState> state_;
+	std::unique_ptr<GameOverEffectState> nextState_;
+
 	// 演出中かどうか
 	bool isPlaying_ = false;
 

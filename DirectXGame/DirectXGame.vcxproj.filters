@@ -1,5 +1,5 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <Filter Include="ソース ファイル">
       <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
@@ -16,88 +16,145 @@
     <Filter Include="シェーダー ファイル">
       <UniqueIdentifier>{718c7f4c-fc51-40ad-a221-b9456a7a1a3c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ソース ファイル\01_Core">
+      <UniqueIdentifier>{d651ffc3-de20-4a0d-954b-53f3692f6ab5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\02_Scene">
+      <UniqueIdentifier>{069fb3d7-a6d1-4c2b-b24d-2bb2a235a640}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\04_Character">
+      <UniqueIdentifier>{5a3a3b53-bc18-4666-8d6a-7f22d451ef9c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\05_Stage">
+      <UniqueIdentifier>{f18e31c2-78d5-4cf1-8581-c4b8957a34b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\06_Effect">
+      <UniqueIdentifier>{07c220ec-ff3c-4a51-ab55-7e751fb9c11f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\07_UI">
+      <UniqueIdentifier>{b12f0b80-4000-42c1-8a86-fe24607bd286}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\08_Camera">
+      <UniqueIdentifier>{5f856708-a870-4710-b430-70d0bac3c0c7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\09_Editor">
+      <UniqueIdentifier>{8fbc7a70-6db6-4b61-8ac9-8e432b44e3e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ソース ファイル\10_Collision">
+      <UniqueIdentifier>{109784f6-72a0-4f4c-bcae-c397e524aa89}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\01_Core">
+      <UniqueIdentifier>{9155ae3f-8ed4-4f91-98c8-433434aafbb8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\02_Scene">
+      <UniqueIdentifier>{3B017C45-AE7C-41E9-B8A3-E33496201EAC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\03_State">
+      <UniqueIdentifier>{C4361534-77BD-4B11-A719-57ED1128414A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\04_Character">
+      <UniqueIdentifier>{5A9B7B44-4954-4EBC-9A00-1CF3FE37153A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\05_Stage">
+      <UniqueIdentifier>{5AF8F00D-0349-4CA0-B509-304F3CE6A469}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\06_Effect">
+      <UniqueIdentifier>{A4841B8D-4547-4B3A-8CD0-DB35A9CB2033}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\07_UI">
+      <UniqueIdentifier>{F563108C-8C43-4A54-B530-BD57EF5A2569}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\08_Camera">
+      <UniqueIdentifier>{06DC9A9C-7FAB-4958-8043-2AB2C0B2EF5F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\09_Editor">
+      <UniqueIdentifier>{EB096E40-86C9-495F-9D0C-69B4975C6268}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ヘッダー ファイル\10_Collision">
+      <UniqueIdentifier>{7302F5B0-BB2A-45C4-9721-F96A1E2D89C6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="GameScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="MapChipField.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\01_Core</Filter>
     </ClCompile>
     <ClCompile Include="Math.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="TitleScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Enemy.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="ClearScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="CameraController.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="SkyDome.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="GameOverScene.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="Fade.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\01_Core</Filter>
     </ClCompile>
     <ClCompile Include="SceneManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\01_Core</Filter>
     </ClCompile>
-    <ClCompile Include="ClearSceneLayout.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="TitleScene.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
     </ClCompile>
-    <ClCompile Include="GameOverEffect.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="GameScene.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
     </ClCompile>
-    <ClCompile Include="GameClearEffect.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="ClearScene.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
     </ClCompile>
-    <ClCompile Include="GameStartEffect.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="GameOverScene.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
     </ClCompile>
-    <ClCompile Include="HpBar.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Fade.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
     </ClCompile>
-    <ClCompile Include="Goal.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Player.cpp">
+      <Filter>ソース ファイル\04_Character</Filter>
     </ClCompile>
-    <ClCompile Include="StageDataLoader.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="StageMapLoader.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="StagePlacementDataSaver.cpp">
-      <Filter>ソース ファイル</Filter>
-    </ClCompile>
-    <ClCompile Include="BlockManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Enemy.cpp">
+      <Filter>ソース ファイル\04_Character</Filter>
     </ClCompile>
     <ClCompile Include="EnemyManager.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\04_Character</Filter>
     </ClCompile>
-    <ClCompile Include="CollisionManager.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="BlockManager.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
     </ClCompile>
-    <ClCompile Include="MapEditorController.cpp">
-      <Filter>ソース ファイル</Filter>
+    <ClCompile Include="Goal.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="MapChipField.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="StageDataLoader.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="StageMapLoader.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="StagePlacementDataSaver.cpp">
+      <Filter>ソース ファイル\05_Stage</Filter>
+    </ClCompile>
+    <ClCompile Include="GameStartEffect.cpp">
+      <Filter>ソース ファイル\06_Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="GameOverEffect.cpp">
+      <Filter>ソース ファイル\06_Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="GameClearEffect.cpp">
+      <Filter>ソース ファイル\06_Effect</Filter>
     </ClCompile>
     <ClCompile Include="ClearSceneEffect.cpp">
-      <Filter>ソース ファイル</Filter>
+      <Filter>ソース ファイル\06_Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="HpBar.cpp">
+      <Filter>ソース ファイル\07_UI</Filter>
+    </ClCompile>
+    <ClCompile Include="ClearSceneLayout.cpp">
+      <Filter>ソース ファイル\07_UI</Filter>
+    </ClCompile>
+    <ClCompile Include="SkyDome.cpp">
+      <Filter>ソース ファイル\08_Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CameraController.cpp">
+      <Filter>ソース ファイル\08_Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="CollisionManager.cpp">
+      <Filter>ソース ファイル\10_Collision</Filter>
+    </ClCompile>
+    <ClCompile Include="MapEditorController.cpp">
+      <Filter>ソース ファイル\09_Editor</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -151,88 +208,118 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameScene.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
     </ClInclude>
     <ClInclude Include="MapChipField.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="Math.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="TitleScene.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="Enemy.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\04_Character</Filter>
     </ClInclude>
     <ClInclude Include="ClearScene.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
     </ClInclude>
     <ClInclude Include="CameraController.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\08_Camera</Filter>
     </ClInclude>
     <ClInclude Include="Player.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\04_Character</Filter>
     </ClInclude>
     <ClInclude Include="SkyDome.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\08_Camera</Filter>
     </ClInclude>
     <ClInclude Include="GameOverScene.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
     </ClInclude>
     <ClInclude Include="Fade.h">
-      <Filter>ヘッダー ファイル</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
     </ClInclude>
     <ClInclude Include="ClearSceneLayout.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\07_UI</Filter>
     </ClInclude>
     <ClInclude Include="MapEditor.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\09_Editor</Filter>
     </ClInclude>
     <ClInclude Include="StagePlacementData.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="GameOverEffect.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
     </ClInclude>
     <ClInclude Include="GameClearEffect.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
     </ClInclude>
     <ClInclude Include="GameStartEffect.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
     </ClInclude>
     <ClInclude Include="HpBar.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\07_UI</Filter>
     </ClInclude>
     <ClInclude Include="Goal.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="StageDataLoader.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="StageMapLoader.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="StagePlacementDataSaver.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="BlockManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\05_Stage</Filter>
     </ClInclude>
     <ClInclude Include="EnemyManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\04_Character</Filter>
     </ClInclude>
     <ClInclude Include="CollisionManager.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\10_Collision</Filter>
     </ClInclude>
     <ClInclude Include="MapEditorController.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\09_Editor</Filter>
     </ClInclude>
     <ClInclude Include="ClearSceneEffect.h">
-      <Filter>ヘッダー ファイル</Filter>
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Character.h">
+      <Filter>ヘッダー ファイル\04_Character</Filter>
+    </ClInclude>
+    <ClInclude Include="ClearSceneState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="Effect.h">
+      <Filter>ヘッダー ファイル\06_Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSceneState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="TitleSceneState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="GameOverEffectState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="GameStartEffectState.h">
+      <Filter>ヘッダー ファイル\03_State</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>ヘッダー ファイル\01_Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>ヘッダー ファイル\01_Core</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneManager.h">
+      <Filter>ヘッダー ファイル\01_Core</Filter>
+    </ClInclude>
+    <ClInclude Include="TitleScene.h">
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

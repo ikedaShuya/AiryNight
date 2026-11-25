@@ -6,6 +6,8 @@
 #include "ClearSceneEffect.h"
 #include "Scene.h"
 #include "Effect.h"
+#include "ClearSceneState.h"
+#include <memory>
 #include <numbers>
 
 class ClearScene : public Scene {
@@ -30,6 +32,12 @@ public:
 	bool IsFinished() const override { return finished_; }
 
 private:
+
+	friend class ClearSceneEffectState;
+	friend class ClearSceneResultState;
+
+	// 状態変更
+	void ChangeState(std::unique_ptr<ClearSceneState> newState);
 
 	// リザルト画面のレイアウト管理
 	ClearSceneLayout layout_;
@@ -91,4 +99,10 @@ private:
 
 	// PRESS SPACEのスプライト
 	KamataEngine::Sprite* pressSpaceSprite_ = nullptr;
+
+	// 現在の状態
+	std::unique_ptr<ClearSceneState> state_;
+
+	// 次の状態
+	std::unique_ptr<ClearSceneState> nextState_;
 };

@@ -2,6 +2,8 @@
 
 #include "KamataEngine.h"
 #include "Effect.h"
+#include "GameStartEffectState.h"
+#include <memory>
 
 class GameStartEffect : public Effect {
 public:
@@ -26,6 +28,16 @@ public:
 	~GameStartEffect() override;
 
 private:
+
+	friend class GameStartStagePreviewState;
+	friend class GameStartCountdownState;
+	friend class GameStartGoState;
+
+	void ChangeState(std::unique_ptr<GameStartEffectState> newState);
+
+	std::unique_ptr<GameStartEffectState> state_;
+	std::unique_ptr<GameStartEffectState> nextState_;
+
 	// 演出タイマー
 	int timer_ = 0;
 

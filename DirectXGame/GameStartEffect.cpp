@@ -1,6 +1,39 @@
 #include "GameStartEffect.h"
+#include <memory>
 
 using namespace KamataEngine;
+
+// ステージ確認状態
+void GameStartStagePreviewState::Update(GameStartEffect& effect) {
+	effect.countdownNumber_ = 0;
+
+	if (effect.timer_ >= effect.kStagePreviewFrame) {
+		effect.ChangeState(std::make_unique<GameStartCountdownState>());
+	}
+}
+
+// カウントダウン状態
+void GameStartCountdownState::Update(GameStartEffect& effect) {
+	int countdownTimer = effect.timer_ - effect.kStagePreviewFrame;
+
+	if (countdownTimer < 60) {
+		effect.countdownNumber_ = 3;
+	} else if (countdownTimer < 120) {
+		effect.countdownNumber_ = 2;
+	} else if (countdownTimer < 180) {
+		effect.countdownNumber_ = 1;
+	}
+
+	if (effect.timer_ >= effect.kStagePreviewFrame + effect.kCountdownFrame) {
+		effect.ChangeState(std::make_unique<GameStartGoState>());
+	}
+}
+
+// GO表示状態
+void GameStartGoState::Update(GameStartEffect& effect) { effect.countdownNumber_ = 4; }
+
+// 状態変更
+void GameStartEffect::ChangeState(std::unique_ptr<GameStartEffectState> newState) { nextState_ = std::move(newState); }
 
 // 初期化
 void GameStartEffect::Initialize() {
@@ -16,6 +49,8 @@ void GameStartEffect::Initialize() {
 	countdown2Sprite_->SetAnchorPoint({0.5f, 0.5f});
 	countdown1Sprite_->SetAnchorPoint({0.5f, 0.5f});
 	countdownGoSprite_->SetAnchorPoint({0.5f, 0.5f});
+
+	state_ = std::make_unique<GameStartStagePreviewState>();
 }
 
 // 更新
@@ -25,17 +60,16 @@ void GameStartEffect::Update() {
 		timer_++;
 	}
 
-	// カウントダウンの数字を設定
-	countdownNumber_ = 0;
+	if (state_) {
+		state_->Update(*this);
+	}
 
-	if (timer_ >= kStagePreviewFrame && timer_ < kStagePreviewFrame + 60) {
-		countdownNumber_ = 3;
-	} else if (timer_ >= kStagePreviewFrame + 60 && timer_ < kStagePreviewFrame + 120) {
-		countdownNumber_ = 2;
-	} else if (timer_ >= kStagePreviewFrame + 120 && timer_ < kStagePreviewFrame + 180) {
-		countdownNumber_ = 1;
-	} else if (timer_ >= kStagePreviewFrame + kCountdownFrame && timer_ < kGameStartFrame) {
-		countdownNumber_ = 4;
+	if (nextState_) {
+		state_ = std::move(nextState_);
+	}
+
+	if (timer_ >= kGameStartFrame) {
+		countdownNumber_ = 0;
 	}
 }
 

@@ -4,6 +4,33 @@
 
 using namespace KamataEngine;
 
+// クリア演出状態
+void ClearSceneEffectState::Update(ClearScene& clearScene) {
+
+	// クリア演出を更新
+	float clearTitleScale = clearScene.clearSceneEffect_.Update(clearScene.layout_.GetClearTitleScale());
+
+	clearScene.worldTransformTitle_.scale_ = {clearTitleScale, clearTitleScale, clearTitleScale};
+
+	// フラッシュ演出が終わったらリザルト待機状態へ
+	if (clearScene.clearSceneEffect_.IsFlashFinished()) {
+		clearScene.pressSpaceSprite_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+		clearScene.ChangeState(std::make_unique<ClearSceneResultState>());
+	}
+}
+
+// リザルト待機状態
+void ClearSceneResultState::Update(ClearScene& clearScene) {
+
+	// Spaceキーで次のシーンへ
+	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
+		clearScene.finished_ = true;
+	}
+}
+
+// 状態変更
+void ClearScene::ChangeState(std::unique_ptr<ClearSceneState> newState) { nextState_ = std::move(newState); }
+
 void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCount) {
 
 	stageNumber_ = stageNumber;
@@ -47,6 +74,9 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 	// エフェクトの初期化
 	effect_->Initialize();
+
+	// クリア演出状態にする
+	state_ = std::make_unique<ClearSceneEffectState>();
 
 	// リザルト情報の背景パネル
 	resultPanelSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {390.0f, 300.0f});
@@ -135,10 +165,6 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 void ClearScene::Update() {
 
-	if (clearSceneEffect_.IsFlashFinished() && Input::GetInstance()->PushKey(DIK_SPACE)) {
-		finished_ = true;
-	}
-
 	skyDome_->Update();
 
 	layout_.EditWithImGui();
@@ -197,14 +223,14 @@ void ClearScene::Update() {
 	pressSpaceSprite_->SetPosition({pressSpacePosition[0], pressSpacePosition[1]});
 	pressSpaceSprite_->SetSize({pressSpaceSize[0], pressSpaceSize[1]});
 
-	// クリア演出の更新
-	float clearTitleScale = clearSceneEffect_.Update(layout_.GetClearTitleScale());
+	// 現在の状態を更新
+	if (state_) {
+		state_->Update(*this);
+	}
 
-	worldTransformTitle_.scale_ = {clearTitleScale, clearTitleScale, clearTitleScale};
-
-	// クリア演出が終わったらPRESS SPACEを表示
-	if (clearSceneEffect_.IsFlashFinished()) {
-		pressSpaceSprite_->SetColor({1.0f, 1.0f, 1.0f, 1.0f});
+	// 状態を切り替える
+	if (nextState_) {
+		state_ = std::move(nextState_);
 	}
 
 	WorldTransformUpdate(worldTransformTitle_);
