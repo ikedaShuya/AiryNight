@@ -1,3 +1,4 @@
+
 #include "GameScene.h"
 #include "Math.h"
 
@@ -63,7 +64,13 @@ void GameScenePlayingState::Update(GameScene& gameScene) {
 	gameScene.player_->Update();
 
 	gameScene.enemyManager_.Update(gameScene.player_);
-	gameScene.collisionManager_.CheckAllCollisions(gameScene.player_, gameScene.enemyManager_.GetEnemies());
+
+	// 全ての当たり判定を行う
+	gameScene.collisionManager_.CheckAllCollisions(
+		gameScene.player_,
+		gameScene.enemyManager_.GetEnemies(),
+		&gameScene.particleManager_,
+		&gameScene.deathParticleManager_);
 }
 
 // ゲームオーバー演出中
@@ -88,7 +95,8 @@ void GameSceneClearState::Update(GameScene& gameScene) {
 void GameScene::ChangeState(std::unique_ptr<GameSceneState> newState) {
 	if (!state_) {
 		state_ = std::move(newState);
-	} else {
+	}
+	else {
 		nextState_ = std::move(newState);
 	}
 }
@@ -103,6 +111,15 @@ void GameScene::Initialize(int stageNumber) {
 	// ブロックモデルデータの生成
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	blockManager_.Initialize(modelBlock_);
+
+	// パーティクル用モデルの生成
+	modelParticle_ = Model::CreateFromOBJ("plane", true);
+
+	// パーティクルの初期化
+	particleManager_.Initialize(modelParticle_, &camera_);
+
+	// 敵撃破用の立体パーティクルを初期化
+	deathParticleManager_.Initialize(modelBlock_, &camera_, true);
 
 	mapChipField_ = new MapChipField;
 
@@ -122,14 +139,17 @@ void GameScene::Initialize(int stageNumber) {
 
 	// 自キャラの生成
 	player_ = new Player();
+
 	// プレイヤーの配置を読み込む
 	stageDataLoader_.LoadPlayerPosition(stageNumber_, stagePlacementData_);
 
 	Vector3 playerPosition = mapChipField_->GetMapChipPositionByIndex(stagePlacementData_.GetPlayerX(), stagePlacementData_.GetPlayerY());
+
 	// 自キャラの初期化
 	player_->Initialize(modelPlayer_, swordModel_, &camera_, playerPosition);
 
 	player_->SetMapChipField(mapChipField_);
+
 	// ゲーム開始演出中は操作できないようにする
 	player_->SetControllable(false);
 
@@ -149,7 +169,7 @@ void GameScene::Initialize(int stageNumber) {
 	CController_->Reset();
 
 	// 移動範囲の指定
-	CameraController::Rect cameraArea = {10.556f, 100 - 12.0f, 11.0f, 13.3f};
+	CameraController::Rect cameraArea = { 10.556f, 100 - 12.0f, 11.0f, 13.3f };
 	CController_->SetMovableArea(cameraArea);
 
 	// HPバー関連の処理の初期化
@@ -159,7 +179,7 @@ void GameScene::Initialize(int stageNumber) {
 	skyDome_ = new SkyDome();
 	skyDome_->Initialize(modelSkyDome_, &camera_);
 
-	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
+	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), { 960.0f, 0.0f });
 
 	// エフェクトを基底クラスのポインタに登録
 	effects_[0] = &gameOverEffect_;
@@ -179,7 +199,7 @@ void GameScene::Update() {
 
 #ifdef USE_IMGUI
 	mapEditorController_.Update(
-	    mapEditor_, stageNumber_, stagePlacementData_, stageDataLoader_, stageMapLoader_, stagePlacementDataSaver_, blockManager_, enemyManager_, goal_, player_, mapChipField_, CController_);
+		mapEditor_, stageNumber_, stagePlacementData_, stageDataLoader_, stageMapLoader_, stagePlacementDataSaver_, blockManager_, enemyManager_, goal_, player_, mapChipField_, CController_);
 #endif
 
 	// マップ編集中はゲームの進行を停止する
@@ -188,6 +208,10 @@ void GameScene::Update() {
 		return;
 	}
 #endif
+
+	// パーティクルの更新
+	particleManager_.Update();
+	deathParticleManager_.Update();
 
 	// 現在の状態を更新
 	if (state_) {
@@ -217,6 +241,10 @@ void GameScene::Draw() {
 	player_->Draw();
 
 	enemyManager_.Draw();
+
+	// パーティクルの描画
+	particleManager_.Draw();
+	deathParticleManager_.Draw();
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();
@@ -252,6 +280,7 @@ GameScene::~GameScene() {
 	delete swordModel_;
 	delete modelPlayer_;
 	delete modelBlock_;
+	delete modelParticle_;
 
 	// スカイドームの解放
 	delete skyDome_;
@@ -261,6 +290,10 @@ GameScene::~GameScene() {
 	delete aSprite_;
 }
 
-void GameScene::GenerateBlocks() { blockManager_.Generate(mapChipField_); }
+void GameScene::GenerateBlocks() {
+	blockManager_.Generate(mapChipField_);
+}
 
-void GameScene::GenerateEnemies() { enemyManager_.Generate(stagePlacementData_, mapChipField_); }
+void GameScene::GenerateEnemies() {
+	enemyManager_.Generate(stagePlacementData_, mapChipField_);
+}

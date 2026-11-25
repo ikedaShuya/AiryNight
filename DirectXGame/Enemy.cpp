@@ -156,7 +156,7 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	state_ = std::make_unique<EnemyMovingState>();
 }
 
-void Enemy::Update(const Player* player) {
+void Enemy::Update(const Player*) {
 
 	if (!state_) {
 		return;
@@ -208,8 +208,6 @@ void Enemy::Update(const Player* player) {
 		worldTransform_.rotation_.x = Lerp(worldTransform_.rotation_.x, 0.0f, returnSpeed);
 	}
 
-	CheckHitByPlayerSword(player);
-
 	WorldTransformUpdate(worldTransform_);
 }
 
@@ -240,31 +238,10 @@ AABB Enemy::GetAABB() const {
 
 void Enemy::OnCollision(const Player* player) { (void)player; }
 
-void Enemy::CheckHitByPlayerSword(const Player* player) {
-	if (isDead_ || invincibleTimer_ > 0) {
-		return;
-	}
-
-	if (!player->IsAttacking()) {
-		return;
-	}
-
-	AABB enemyAABB = GetAABB();
-	AABB swordAABB = player->GetSwordAABB();
-
-	// AABB同士の当たり判定
-	bool hit = (enemyAABB.min.x <= swordAABB.max.x && enemyAABB.max.x >= swordAABB.min.x) && (enemyAABB.min.y <= swordAABB.max.y && enemyAABB.max.y >= swordAABB.min.y) &&
-	           (enemyAABB.min.z <= swordAABB.max.z && enemyAABB.max.z >= swordAABB.min.z);
-
-	if (hit) {
-		OnHit(player);
-	}
-}
-
-void Enemy::OnHit(const Player* player) {
+bool Enemy::OnHit(const Player* player) {
 
 	if (isDead_ || invincibleTimer_ > 0) {
-		return;
+		return false;
 	}
 
 	hp_--;
@@ -280,6 +257,8 @@ void Enemy::OnHit(const Player* player) {
 		isDead_ = true;
 		ChangeState(std::make_unique<EnemyDeadState>());
 	}
+
+	return true;
 }
 
 // 左右の壁との当たり判定

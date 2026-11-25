@@ -1,3 +1,4 @@
+
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
@@ -39,7 +40,7 @@ public:
 	void OnCollision(const Player* player);
 
 	// 攻撃を受けたとき
-	void OnHit(const Player* player);
+	bool OnHit(const Player* player);
 
 	// デスフラグのgetter
 	bool IsDead() const { return isDead_; }
@@ -61,7 +62,7 @@ private:
 	// ワールド変換データ
 	KamataEngine::WorldTransform worldTransform_;
 
-	// モデル（スライド6
+	// モデル
 	KamataEngine::Model* model_ = nullptr;
 
 	// カメラ
@@ -78,8 +79,10 @@ private:
 
 	// 最初の角度[度]
 	static inline const float kWalkMotionAngleStart = 0.0f;
+
 	// 最後の角度[度]
 	static inline const float kWalkMotionAngleEnd = 30.0f;
+
 	// アニメーションの周期となる時間[秒]
 	static inline const float kWalkMotionTime = 1.0f;
 
@@ -120,9 +123,13 @@ private:
 	int invincibleTimer_ = 0;
 	static constexpr int kInvincibleFrame = 20;
 
-	KamataEngine::Vector3 knockbackVelocity_{0, 0, 0};
+	// ノックバック速度
+	KamataEngine::Vector3 knockbackVelocity_{ 0, 0, 0 };
+
+	// ノックバック減衰率
 	static constexpr float kKnockbackAttenuation = 0.85f;
 
+	// ノックバックの強さ
 	static inline const float kKnockbackPower = 0.25f;
 
 	// 現在の状態
