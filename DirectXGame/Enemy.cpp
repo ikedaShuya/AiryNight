@@ -156,7 +156,7 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	state_ = std::make_unique<EnemyMovingState>();
 }
 
-void Enemy::Update(const Player*) {
+void Enemy::Update(const Player* player) {
 
 	if (!state_) {
 		return;
