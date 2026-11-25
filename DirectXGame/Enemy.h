@@ -37,15 +37,12 @@ public:
 	void OnCollision(const Player* player);
 
 	// 攻撃を受けたとき
-	void OnHit(const Player* player);
+	bool OnHit(const Player* player);
 
 	// デスフラグのgetter
 	bool IsDead() const { return isDead_; }
 
 private:
-
-	// 敵の剣との当たり判定
-	void CheckHitByPlayerSword(const Player* player);
 
 	// 敵の行動状態
 	enum class EnemyState { Moving, Waiting };

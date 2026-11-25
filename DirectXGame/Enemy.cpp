@@ -26,7 +26,7 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	walkTimer_ = 0.0f;
 }
 
-void Enemy::Update(const Player* player) {
+void Enemy::Update(const Player*) {
 
 	if (isDead_) {
 		return;
@@ -190,8 +190,6 @@ void Enemy::Update(const Player* player) {
 		// 体の揺れもリセットしたい場合は同様に補間してください
 	}
 
-	CheckHitByPlayerSword(player);
-
 	WorldTransformUpdate(worldTransform_);
 }
 
@@ -222,31 +220,10 @@ AABB Enemy::GetAABB() const {
 
 void Enemy::OnCollision(const Player* player) { (void)player; }
 
-void Enemy::CheckHitByPlayerSword(const Player* player) {
-	if (isDead_ || invincibleTimer_ > 0) {
-		return;
-	}
-
-	if (!player->IsAttacking()) {
-		return;
-	}
-
-	AABB enemyAABB = GetAABB();
-	AABB swordAABB = player->GetSwordAABB();
-
-	// AABB同士の当たり判定
-	bool hit = (enemyAABB.min.x <= swordAABB.max.x && enemyAABB.max.x >= swordAABB.min.x) && (enemyAABB.min.y <= swordAABB.max.y && enemyAABB.max.y >= swordAABB.min.y) &&
-	           (enemyAABB.min.z <= swordAABB.max.z && enemyAABB.max.z >= swordAABB.min.z);
-
-	if (hit) {
-		OnHit(player);
-	}
-}
-
-void Enemy::OnHit(const Player* player) {
+bool Enemy::OnHit(const Player* player) {
 
 	if (isDead_ || invincibleTimer_ > 0) {
-		return;
+		return false;
 	}
 
 	hp_--;
@@ -261,6 +238,8 @@ void Enemy::OnHit(const Player* player) {
 	if (hp_ <= 0) {
 		isDead_ = true;
 	}
+
+	return true;
 }
 
 // 左右の壁との当たり判定

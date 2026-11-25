@@ -18,6 +18,15 @@ void GameScene::Initialize(int stageNumber) {
 	modelBlock_ = Model::CreateFromOBJ("cube", true);
 	blockManager_.Initialize(modelBlock_);
 
+	// パーティクル用モデルの生成
+	modelParticle_ = Model::CreateFromOBJ("plane", true);
+
+	// パーティクルの初期化
+	particleManager_.Initialize(modelParticle_, &camera_);
+
+	// 敵撃破用の立体パーティクルを初期化
+	deathParticleManager_.Initialize(modelBlock_, &camera_, true);
+
 	mapChipField_ = new MapChipField;
 
 	stageMapLoader_.LoadMap(stageNumber_, *mapChipField_);
@@ -100,6 +109,11 @@ void GameScene::Update() {
 	}
 #endif
 
+	// パーティクルの更新
+	particleManager_.Update();
+
+	deathParticleManager_.Update();
+
 	// ゲームオーバー演出中
 	if (gameOverEffect_.IsPlaying()) {
 
@@ -174,7 +188,7 @@ void GameScene::Update() {
 		enemyManager_.Update(player_);
 
 		// 全ての当たり判定を行う
-		collisionManager_.CheckAllCollisions(player_, enemyManager_.GetEnemies());
+		collisionManager_.CheckAllCollisions(player_, enemyManager_.GetEnemies(), &particleManager_, &deathParticleManager_);
 	}
 }
 
@@ -195,6 +209,10 @@ void GameScene::Draw() {
 	player_->Draw();
 
 	enemyManager_.Draw();
+
+	// パーティクルの描画
+	particleManager_.Draw();
+	deathParticleManager_.Draw();
 
 	// 3Dモデル描画後処理
 	Model::PostDraw();
@@ -230,6 +248,8 @@ GameScene::~GameScene() {
 	delete swordModel_;
 	delete modelPlayer_;
 	delete modelBlock_;
+
+	delete modelParticle_;
 
 	// スカイドームの解放
 	delete skyDome_;

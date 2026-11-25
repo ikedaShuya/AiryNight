@@ -25,6 +25,7 @@
 #endif
 
 #include "Scene.h"
+#include "ParticleManager.h"
 
 enum class GameResult { None, Clear, GameOver };
 
@@ -93,11 +94,17 @@ private:
 
 	CollisionManager collisionManager_;
 
+	// パーティクル管理
+	ParticleManager particleManager_;
+	ParticleManager deathParticleManager_;
+
 	// カメラ
 	KamataEngine::Camera camera_;
 
 	// ブロックモデルデータ
 	KamataEngine::Model* modelBlock_ = nullptr;	
+
+	KamataEngine::Model* modelParticle_ = nullptr;
 
 	// マップチップフィールド
 	MapChipField* mapChipField_ = nullptr;

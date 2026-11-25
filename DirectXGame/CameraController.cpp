@@ -1,6 +1,7 @@
 #include "CameraController.h"
 #include "Player.h"
 #include "Math.h"
+#include <cassert>
 
 using namespace KamataEngine;
 
