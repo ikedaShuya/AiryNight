@@ -195,7 +195,7 @@ void GameScene::Initialize(int stageNumber) {
 	ChangeState(std::make_unique<GameSceneStartState>());
 }
 
-void GameScene::Update() {
+void GameScene::OnUpdate() {
 
 #ifdef USE_IMGUI
 	mapEditorController_.Update(
@@ -224,7 +224,7 @@ void GameScene::Update() {
 	}
 }
 
-void GameScene::Draw() {
+void GameScene::OnDraw() {
 
 	// 3Dモデル描画前処理
 	Model::PreDraw();

@@ -69,6 +69,12 @@ public:
 	// プレイヤー操作の許可
 	void SetControllable(bool controllable) { isControllable_ = controllable; }
 
+	// コマンドからの操作要求
+	void RequestMoveLeft() { requestMoveLeft_ = true; }
+	void RequestMoveRight() { requestMoveRight_ = true; }
+	void RequestJump() { requestJump_ = true; }
+	void RequestAttack() { requestAttack_ = true; }
+
 	// プレイヤーの位置を変更
 	void SetPosition(const KamataEngine::Vector3& position) {
 		worldTransform_.translation_ = position;
@@ -265,6 +271,12 @@ private:
 
 	// 操作可能か
 	bool isControllable_ = true;
+
+	// コマンドからの操作要求フラグ
+	bool requestMoveLeft_ = false;
+	bool requestMoveRight_ = false;
+	bool requestJump_ = false;
+	bool requestAttack_ = false;
 
 	// 現在の状態
 	std::unique_ptr<PlayerState> state_;

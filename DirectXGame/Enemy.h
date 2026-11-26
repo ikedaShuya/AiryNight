@@ -1,9 +1,9 @@
-
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
 #include "Character.h"
 #include "EnemyState.h"
+#include "EnemyMovementStrategy.h"
 #include <memory>
 
 class Player;
@@ -22,6 +22,18 @@ public:
 
 	// マップチップフィールドを設定
 	void SetMapChipField(MapChipField* mapChipField) { mapChipField_ = mapChipField; }
+
+	// 移動戦略を設定
+	void SetMovementStrategy(std::unique_ptr<EnemyMovementStrategy> strategy) { movementStrategy_ = std::move(strategy); }
+
+	// 移動速度を取得
+	float GetVelocityX() const { return velocity_.x; }
+
+	// 歩行速度を取得
+	float GetWalkSpeed() const { return kWalkSpeed; }
+
+	// 進行方向を反転
+	void ReverseVelocityX() { velocity_.x *= -1.0f; }
 
 	/// <summary>
 	/// 更新
@@ -134,6 +146,9 @@ private:
 
 	// 現在の状態
 	std::unique_ptr<EnemyState> state_;
+
+	// 移動戦略
+	std::unique_ptr<EnemyMovementStrategy> movementStrategy_;
 
 	float stateTimer_ = 0.0f;
 

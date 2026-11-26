@@ -163,7 +163,7 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 	layout_.Load();
 }
 
-void ClearScene::Update() {
+void ClearScene::OnUpdate() {
 
 	skyDome_->Update();
 
@@ -236,7 +236,7 @@ void ClearScene::Update() {
 	WorldTransformUpdate(worldTransformTitle_);
 }
 
-void ClearScene::Draw() {
+void ClearScene::OnDraw() {
 
 	Model::PreDraw();
 
