@@ -18,12 +18,12 @@ public:
 	/// <summary>
 	/// 更新
 	/// </summary>
-	void OnUpdate() override;
+	void Update() override;
 
 	/// <summary>
 	/// 描画
 	/// </summary>
-	void OnDraw() override;
+	void Draw() override;
 
 	~TitleScene() override;
 	

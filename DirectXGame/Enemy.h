@@ -1,9 +1,9 @@
+
 #pragma once
 #include "KamataEngine.h"
 #include "Math.h"
 #include "Character.h"
 #include "EnemyState.h"
-#include "EnemyMovementStrategy.h"
 #include <memory>
 
 class Player;
@@ -45,18 +45,7 @@ public:
 	// デスフラグのgetter
 	bool IsDead() const { return isDead_; }
 
-	// 移動用の情報
-	float GetVelocityX() const { return velocity_.x; }
-	float GetWalkSpeed() const { return kWalkSpeed; }
-	void ReverseVelocityX() { velocity_.x *= -1.0f; }
-
-	// 移動方法を設定
-	void SetMovementStrategy(std::unique_ptr<EnemyMovementStrategy> strategy);
-
 private:
-
-	// 移動方法
-	std::unique_ptr<EnemyMovementStrategy> movementStrategy_;
 
 	// 敵の剣との当たり判定
 	void CheckHitByPlayerSword(const Player* player);

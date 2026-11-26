@@ -12,12 +12,7 @@ bool EnemyMovingState::Update(Enemy& enemy, const Player* player) {
 
 	enemy.stateTimer_ += 1.0f / 60.0f;
 
-	// Strategyから移動速度を取得
-	float strategyVelocityX = enemy.movementStrategy_->GetMoveVelocityX(enemy, player);
-
-	// ノックバックを加算
-	Vector3 totalVelocity = enemy.knockbackVelocity_;
-	totalVelocity.x += strategyVelocityX;
+	Vector3 totalVelocity = enemy.velocity_ + enemy.knockbackVelocity_;
 
 	// 壁との当たり判定
 	float moveX = totalVelocity.x;
@@ -25,7 +20,7 @@ bool EnemyMovingState::Update(Enemy& enemy, const Player* player) {
 
 	// 壁にぶつかった場合
 	if (moveX != totalVelocity.x) {
-		enemy.movementStrategy_->OnWallHit(enemy);
+		enemy.velocity_.x *= -1.0f;
 		enemy.knockbackVelocity_.x = 0.0f;
 	}
 
@@ -139,9 +134,6 @@ void Enemy::ChangeState(std::unique_ptr<EnemyState> newState) {
 	stateTimer_ = 0.0f;
 }
 
-// 移動方法を変更
-void Enemy::SetMovementStrategy(std::unique_ptr<EnemyMovementStrategy> strategy) { movementStrategy_ = std::move(strategy); }
-
 void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 
 	// NULLポインタチェック
@@ -160,9 +152,6 @@ void Enemy::Initialize(Model* model, Camera* camera, const Vector3& position) {
 	velocity_ = {-kWalkSpeed, 0, 0};
 
 	walkTimer_ = 0.0f;
-
-	// 初期移動方法は巡回
-	movementStrategy_ = std::make_unique<PatrolMovementStrategy>();
 
 	state_ = std::make_unique<EnemyMovingState>();
 }

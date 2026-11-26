@@ -4,8 +4,6 @@
 #include "Character.h"
 #include "PlayerState.h"
 #include <memory>
-#include <vector>
-#include "PlayerHpObserver.h"
 
 class MapChipField;
 
@@ -64,24 +62,12 @@ public:
 	int GetHp() const { return hp_; }
 	int GetMaxHp() const { return maxHp_; }
 
-	// HP変更通知を受け取るオブジェクトを登録
-	void AddHpObserver(PlayerHpObserver* observer);
-
-	// HP変更通知を受け取るオブジェクトを解除
-	void RemoveHpObserver(PlayerHpObserver* observer);
-
 	KamataEngine::Vector3 GetHeadWorldPosition() const;
 
 	bool IsDead() const { return hp_ <= 0; }
 
 	// プレイヤー操作の許可
 	void SetControllable(bool controllable) { isControllable_ = controllable; }
-
-	// コマンドから呼び出す操作要求
-	void RequestMoveLeft() { moveLeftRequested_ = true; }
-	void RequestMoveRight() { moveRightRequested_ = true; }
-	void RequestJump() { jumpRequested_ = true; }
-	void RequestAttack() { attackRequested_ = true; }
 
 	// プレイヤーの位置を変更
 	void SetPosition(const KamataEngine::Vector3& position) {
@@ -101,12 +87,6 @@ private:
 	friend class PlayerDeadState;
 
 	void ChangeState(PlayerStateType stateType);
-
-	// コマンドによる操作要求
-	bool moveLeftRequested_ = false;
-	bool moveRightRequested_ = false;
-	bool jumpRequested_ = false;
-	bool attackRequested_ = false;
 
 	// ============================
 	// 内部処理
@@ -289,10 +269,4 @@ private:
 	// 現在の状態
 	std::unique_ptr<PlayerState> state_;
 	PlayerStateType stateType_ = PlayerStateType::kNormal;
-
-	// HP変更を通知する
-	void NotifyHpChanged();
-
-	// HP変更通知先
-	std::vector<PlayerHpObserver*> hpObservers_;
 };
