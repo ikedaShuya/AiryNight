@@ -14,7 +14,6 @@ void GameSceneStartState::Update(GameScene& gameScene) {
 	gameScene.gameStartEffect_.Update();
 
 	gameScene.skyDome_->Update();
-	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
 
 	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
 
@@ -54,7 +53,6 @@ void GameScenePlayingState::Update(GameScene& gameScene) {
 	gameScene.playTimer_++;
 
 	gameScene.skyDome_->Update();
-	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
 
 	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
 
@@ -175,6 +173,12 @@ void GameScene::Initialize(int stageNumber) {
 	// HPバー関連の処理の初期化
 	hpBar_.Initialize();
 
+	// HP変更通知先にHPバーを登録
+	player_->AddHpObserver(&hpBar_);
+
+	// 初期HPを通知
+	hpBar_.OnHpChanged(player_->GetHp(), player_->GetMaxHp());
+
 	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
 	skyDome_ = new SkyDome();
 	skyDome_->Initialize(modelSkyDome_, &camera_);
@@ -195,7 +199,7 @@ void GameScene::Initialize(int stageNumber) {
 	ChangeState(std::make_unique<GameSceneStartState>());
 }
 
-void GameScene::Update() {
+void GameScene::OnUpdate() {
 
 #ifdef USE_IMGUI
 	mapEditorController_.Update(
@@ -224,7 +228,7 @@ void GameScene::Update() {
 	}
 }
 
-void GameScene::Draw() {
+void GameScene::OnDraw() {
 
 	// 3Dモデル描画前処理
 	Model::PreDraw();
@@ -269,6 +273,8 @@ GameScene::~GameScene() {
 
 	// カメラコントローラの解放
 	delete CController_;
+
+	player_->RemoveHpObserver(&hpBar_);
 
 	// 自キャラの解放
 	delete player_;

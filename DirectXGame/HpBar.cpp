@@ -34,3 +34,5 @@ HpBar::~HpBar() {
 	delete background_;
 	delete foreground_;
 }
+
+void HpBar::OnHpChanged(int hp, int maxHp) { Update(hp, maxHp); }

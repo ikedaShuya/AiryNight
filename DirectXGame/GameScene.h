@@ -41,10 +41,10 @@ public:
 	void Initialize(int stageNumber = 1);
 
 	// 更新
-	void Update() override;
+	void OnUpdate() override;
 
 	// 描画
-	void Draw() override;
+	void OnDraw() override;
 
 	~GameScene() override;
 

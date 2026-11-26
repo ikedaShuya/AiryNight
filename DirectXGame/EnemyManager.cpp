@@ -1,5 +1,6 @@
-
 #include "EnemyManager.h"
+#include "EnemyMovementStrategy.h"
+#include "SpeedBoostMovementDecorator.h"
 
 using namespace KamataEngine;
 
@@ -16,7 +17,10 @@ void EnemyManager::Generate(const StagePlacementData& placementData, MapChipFiel
 	}
 	enemies_.clear();
 
+	
 	// 配置データから敵を生成
+	int enemyIndex = 0;
+
 	for (const StagePlacementData::EnemyPosition& position : placementData.GetEnemyPositions()) {
 
 		Vector3 enemyPosition = mapChipField->GetMapChipPositionByIndex(position.x, position.y);
@@ -26,7 +30,18 @@ void EnemyManager::Generate(const StagePlacementData& placementData, MapChipFiel
 		enemy->Initialize(model_, camera_, enemyPosition);
 		enemy->SetMapChipField(mapChipField);
 
+		// 敵ごとに移動方法を設定
+		if (enemyIndex % 2 == 0) {
+			// 偶数番目：高速追跡
+			enemy->SetMovementStrategy(std::make_unique<SpeedBoostMovementDecorator>(std::make_unique<ChaseMovementStrategy>()));
+		} else {
+			// 奇数番目：通常巡回
+			enemy->SetMovementStrategy(std::make_unique<PatrolMovementStrategy>());
+		}
+
 		enemies_.push_back(enemy);
+
+		enemyIndex++;
 	}
 }
 
@@ -48,7 +63,7 @@ int EnemyManager::RemoveDeadEnemies() {
 
 	for (auto it = enemies_.begin(); it != enemies_.end();) {
 
-		if ((*it)->IsDead()) {
+		if ((*it)->IsDead()) {	
 			delete *it;
 			it = enemies_.erase(it);
 			removedCount++;

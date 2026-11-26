@@ -4,14 +4,21 @@
 class Scene {
 public:
 	// 更新
-	virtual void Update() = 0;
+	void Update() { OnUpdate(); }
 
 	// 描画
-	virtual void Draw() = 0;
+	void Draw() { OnDraw(); }
 
 	// シーン終了判定
 	virtual bool IsFinished() const = 0;
 
 	// 仮想デストラクタ
 	virtual ~Scene() = default;
+
+protected:
+	// 各シーン固有の更新処理
+	virtual void OnUpdate() = 0;
+
+	// 各シーン固有の描画処理
+	virtual void OnDraw() = 0;
 };

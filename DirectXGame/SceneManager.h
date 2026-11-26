@@ -1,11 +1,7 @@
 #pragma once
 
-#include "ClearScene.h"
 #include "Fade.h"
-#include "GameOverScene.h"
-#include "GameScene.h"
-#include "TitleScene.h"
-#include "Scene.h"
+#include "SceneFactory.h"
 
 class SceneManager {
 public:
@@ -22,14 +18,8 @@ public:
 	void Finalize();
 
 private:
-	// シーンの種類
-	enum class SceneType {
-		kUnknown = 0,
-		kTitle,
-		kGame,
-		kClear,
-		kGameOver,
-	};
+	// シーン生成
+	AiryNightSceneFactory sceneFactory_;
 
 	// 現在のシーンを管理する基底クラスのポインタ
 	Scene* currentScene_ = nullptr;

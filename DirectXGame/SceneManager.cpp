@@ -1,5 +1,7 @@
 #include "SceneManager.h"
+#include "GameScene.h"
 
+// 初期化
 void SceneManager::Initialize() {
 
 	// フェードの初期化
@@ -8,12 +10,13 @@ void SceneManager::Initialize() {
 	// 最初のシーンをタイトルにする
 	scene_ = SceneType::kTitle;
 
-	TitleScene* titleScene = new TitleScene;
-	titleScene->Initialize();
+	SceneCreateData data;
+	data.stageNumber = currentStage_;
 
-	currentScene_ = titleScene;
+	currentScene_ = sceneFactory_.CreateScene(scene_, data);
 }
 
+// 更新
 void SceneManager::Update() {
 
 	// フェード更新
@@ -26,6 +29,7 @@ void SceneManager::Update() {
 	UpdateScene();
 }
 
+// 描画
 void SceneManager::Draw() {
 
 	// 現在のシーン描画
@@ -35,6 +39,7 @@ void SceneManager::Draw() {
 	fade_.Draw();
 }
 
+// 終了処理
 void SceneManager::Finalize() {
 
 	// 現在のシーンを解放
@@ -42,6 +47,7 @@ void SceneManager::Finalize() {
 	currentScene_ = nullptr;
 }
 
+// シーン終了判定
 bool SceneManager::IsSceneFinished() {
 
 	if (currentScene_ == nullptr) {
@@ -51,104 +57,81 @@ bool SceneManager::IsSceneFinished() {
 	return currentScene_->IsFinished();
 }
 
+// シーン切り替え
 void SceneManager::ChangeSceneNow() {
 
+	SceneType nextScene = scene_;
+	SceneCreateData data;
+
+	data.stageNumber = currentStage_;
+
 	switch (scene_) {
+
 	case SceneType::kTitle:
 
 		currentStage_ = 1;
+		data.stageNumber = currentStage_;
 
-		// タイトルシーンを削除
-		delete currentScene_;
-		currentScene_ = nullptr;
-
-		// ゲームシーンを生成
-		scene_ = SceneType::kGame;
-
-		{
-			GameScene* gameScene = new GameScene;
-			gameScene->Initialize(currentStage_);
-			currentScene_ = gameScene;
-		}
+		nextScene = SceneType::kGame;
 		break;
 
 	case SceneType::kGame: {
-		// ゲームシーン固有の情報を取得
+
 		GameScene* gameScene = static_cast<GameScene*>(currentScene_);
 
 		if (gameScene->GetResult() == GameResult::Clear) {
 
 			// ゲームのプレイ時間を取得
-			int clearPlayTimer = gameScene->GetPlayTimer();
+			data.playTimer = gameScene->GetPlayTimer();
 
 			// 敵の撃破数を取得
-			int clearDefeatedEnemyCount = gameScene->GetDefeatedEnemyCount();
+			data.defeatedEnemyCount = gameScene->GetDefeatedEnemyCount();
 
-			// ゲームシーンを削除
-			delete currentScene_;
-			currentScene_ = nullptr;
-
-			// クリアリザルト画面へ
-			scene_ = SceneType::kClear;
-
-			ClearScene* clearScene = new ClearScene;
-			clearScene->Initialize(currentStage_, clearPlayTimer, clearDefeatedEnemyCount);
-			currentScene_ = clearScene;
+			nextScene = SceneType::kClear;
 
 		} else if (gameScene->GetResult() == GameResult::GameOver) {
 
-			// ゲームシーンを削除
-			delete currentScene_;
-			currentScene_ = nullptr;
+			nextScene = SceneType::kGameOver;
+		} else {
 
-			// ゲームオーバー画面へ
-			scene_ = SceneType::kGameOver;
-
-			GameOverScene* gameOverScene = new GameOverScene;
-			gameOverScene->Initialize();
-			currentScene_ = gameOverScene;
+			// クリアでもゲームオーバーでもなければ何もしない
+			return;
 		}
+
 		break;
 	}
 
 	case SceneType::kClear:
 
-		// リザルト画面を削除
-		delete currentScene_;
-		currentScene_ = nullptr;
-
 		// クリア後はタイトルへ戻る
 		currentStage_ = 1;
-		scene_ = SceneType::kTitle;
+		data.stageNumber = currentStage_;
 
-		{
-			TitleScene* titleScene = new TitleScene;
-			titleScene->Initialize();
-			currentScene_ = titleScene;
-		}
+		nextScene = SceneType::kTitle;
 		break;
 
 	case SceneType::kGameOver:
 
-		// ゲームオーバー画面を削除
-		delete currentScene_;
-		currentScene_ = nullptr;
-
 		// ゲームオーバーになったステージから再挑戦
-		scene_ = SceneType::kGame;
+		data.stageNumber = currentStage_;
 
-		{
-			GameScene* gameScene = new GameScene;
-			gameScene->Initialize(currentStage_);
-			currentScene_ = gameScene;
-		}
+		nextScene = SceneType::kGame;
 		break;
 
 	default:
-		break;
+		return;
 	}
+
+	// 現在のシーンを削除
+	delete currentScene_;
+	currentScene_ = nullptr;
+
+	// 次のシーンを生成
+	scene_ = nextScene;
+	currentScene_ = sceneFactory_.CreateScene(scene_, data);
 }
 
+// シーン切り替え
 void SceneManager::ChangeScene() {
 
 	// シーン切り替えを開始
@@ -172,6 +155,7 @@ void SceneManager::ChangeScene() {
 	}
 }
 
+// 現在のシーン更新
 void SceneManager::UpdateScene() {
 
 	if (currentScene_ != nullptr) {
@@ -179,6 +163,7 @@ void SceneManager::UpdateScene() {
 	}
 }
 
+// 現在のシーン描画
 void SceneManager::DrawScene() {
 
 	if (currentScene_ != nullptr) {

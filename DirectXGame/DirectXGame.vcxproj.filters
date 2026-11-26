@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <ItemGroup>
     <Filter Include="ソース ファイル">
@@ -161,6 +161,18 @@
     </ClCompile>
     <ClCompile Include="MapEditorController.cpp">
       <Filter>ソース ファイル\09_Editor</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneFactory.cpp">
+      <Filter>ソース ファイル\02_Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="PlayerCommand.cpp">
+      <Filter>ソース ファイル\04_Character</Filter>
+    </ClCompile>
+    <ClCompile Include="EnemyMovementStrategy.cpp">
+      <Filter>ソース ファイル\04_Character</Filter>
+    </ClCompile>
+    <ClCompile Include="SpeedBoostMovementDecorator.cpp">
+      <Filter>ソース ファイル</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,6 +344,21 @@
     </ClInclude>
     <ClInclude Include="TitleScene.h">
       <Filter>ヘッダー ファイル\02_Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneFactory.h">
+      <Filter>ヘッダー ファイル\02_Scene</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerCommand.h">
+      <Filter>ヘッダー ファイル\04_Character</Filter>
+    </ClInclude>
+    <ClInclude Include="EnemyMovementStrategy.h">
+      <Filter>ヘッダー ファイル\04_Character</Filter>
+    </ClInclude>
+    <ClInclude Include="PlayerHpObserver.h">
+      <Filter>ヘッダー ファイル\04_Character</Filter>
+    </ClInclude>
+    <ClInclude Include="SpeedBoostMovementDecorator.h">
+      <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

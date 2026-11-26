@@ -1,8 +1,9 @@
 #pragma once
 
 #include "KamataEngine.h"
+#include "PlayerHpObserver.h"
 
-class HpBar {
+class HpBar : public PlayerHpObserver {
 public:
 	// 初期化
 	void Initialize();
@@ -14,6 +15,9 @@ public:
 	void Draw();
 
 	~HpBar();
+
+	// HP変更通知を受け取る
+	void OnHpChanged(int hp, int maxHp) override;
 
 private:
 	// HPバーの背景と前景

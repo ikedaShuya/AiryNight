@@ -26,7 +26,7 @@ void GameOverScene::Initialize() {
 	hintSprite_->SetAnchorPoint({0.5f, 0.5f});
 }
 
-void GameOverScene::Update() {
+void GameOverScene::OnUpdate() {
 	if (Input::GetInstance()->PushKey(DIK_SPACE)) {
 
 		finished_ = true;
@@ -44,7 +44,7 @@ void GameOverScene::Update() {
 	WorldTransformUpdate(worldTransformTitle_);
 }
 
-void GameOverScene::Draw() {
+void GameOverScene::OnDraw() {
 
 	Model::PreDraw();
 

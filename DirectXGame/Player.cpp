@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "Player.h"
 #include "MapChipField.h"
+#include "PlayerCommand.h"
 #include <algorithm>
 #include <numbers>
 #include <cassert>
@@ -118,6 +119,40 @@ void Player::Update() {
 		return;
 	}
 
+	// 前フレームの操作要求をリセット
+	moveLeftRequested_ = false;
+	moveRightRequested_ = false;
+	jumpRequested_ = false;
+	attackRequested_ = false;
+
+	// コマンドを用意
+	MoveLeftCommand moveLeftCommand;
+	MoveRightCommand moveRightCommand;
+	JumpCommand jumpCommand;
+	AttackCommand attackCommand;
+
+	// 入力に応じてコマンドを実行
+	if (Input::GetInstance()->PushKey(DIK_A)) {
+		moveLeftCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->PushKey(DIK_D)) {
+		moveRightCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		jumpCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->TriggerKey(DIK_J)) {
+		attackCommand.Execute(*this);
+	}
+
+	// ジャンプ入力をバッファに保存
+	if (jumpRequested_) {
+		jumpBufferTimer_ = kJumpBufferFrame;
+	}
+
 	// 状態更新
 	PlayerStateType nextState = state_->Update(*this);
 
@@ -131,11 +166,6 @@ void Player::Update() {
 
 	float swordOffsetX = 1.3f;
 	swordWorldTransform_.translation_ = worldTransform_.translation_ + Vector3((lrDirection_ == LRDirection::kRight ? 1 : -1) * swordOffsetX, 0.0f, 0.0f);
-
-	// ジャンプ入力をバッファに保存
-	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
-		jumpBufferTimer_ = kJumpBufferFrame;
-	}
 
 	if (jumpBufferTimer_ > 0) {
 		jumpBufferTimer_--;
@@ -227,8 +257,8 @@ void Player::OnCollision(const Enemy* enemy) {
 void Player::InputHorizontal() {
 
 	// 左右入力がある？
-	bool pushD = Input::GetInstance()->PushKey(DIK_D);
-	bool pushA = Input::GetInstance()->PushKey(DIK_A);
+	bool pushD = moveRightRequested_;
+	bool pushA = moveLeftRequested_;
 
 	if (!(pushD || pushA)) {
 		velocity_.x *= (1.0f - kAttenuation);
@@ -280,7 +310,7 @@ void Player::ApplyGravity() {
 
 void Player::ProcessJump() {
 
-	if (!Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	if (!jumpRequested_) {
 		return;
 	}
 
@@ -306,7 +336,7 @@ void Player::ProcessJump() {
 
 void Player::ProcessAttack() {
 
-	if (!isAttacking_ && Input::GetInstance()->TriggerKey(DIK_J)) {
+	if (!isAttacking_ && attackRequested_) {
 		isAttacking_ = true;
 		attackTimer_ = kAttackFrame;
 
@@ -698,12 +728,36 @@ void Player::TakeDamage(int damage) {
 	if (damageCoolTime_ > 0) {
 		return;
 	}
+
 	hp_ -= damage;
 	hp_ = std::max(hp_, 0);
 	damageCoolTime_ = kDamageCoolTime;
+
+	// HP変更を通知
+	NotifyHpChanged();
 }
 
 Vector3 Player::GetHeadWorldPosition() const {
 	AABB aabb = GetAABB();
 	return {(aabb.min.x + aabb.max.x) * 0.5f, aabb.max.y, (aabb.min.z + aabb.max.z) * 0.5f};
+}
+
+// HP変更通知先を登録
+void Player::AddHpObserver(PlayerHpObserver* observer) { hpObservers_.push_back(observer); }
+
+// HP変更通知先を解除
+void Player::RemoveHpObserver(PlayerHpObserver* observer) {
+	for (auto it = hpObservers_.begin(); it != hpObservers_.end(); ++it) {
+		if (*it == observer) {
+			hpObservers_.erase(it);
+			return;
+		}
+	}
+}
+
+// HP変更を通知
+void Player::NotifyHpChanged() {
+	for (PlayerHpObserver* observer : hpObservers_) {
+		observer->OnHpChanged(hp_, maxHp_);
+	}
 }

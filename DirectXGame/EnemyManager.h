@@ -3,7 +3,7 @@
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "StagePlacementData.h"
-#include <list>
+#include <list>	
 
 class EnemyManager {
 public:

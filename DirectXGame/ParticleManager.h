@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Particle.h"
-#include <list>
+#include <vector>
 
 class ParticleManager {
 public:
+	// パーティクルの最大保持数
+	static constexpr int kPoolSize = 256;
+
 	// 初期化
 	void Initialize(KamataEngine::Model* model, KamataEngine::Camera* camera, bool isDeathParticle = false);
 
@@ -26,7 +29,11 @@ private:
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Camera* camera_ = nullptr;
 
-	std::list<Particle*> particles_;
+	// 使用中のパーティクル
+	std::vector<Particle*> particles_;
+
+	// 再利用可能なパーティクル
+	std::vector<Particle*> particlePool_;
 
 	bool isDeathParticle_ = false;
 };

@@ -53,7 +53,7 @@ void TitleScene::Initialize() {
 	state_ = std::make_unique<TitleSceneIdleState>();
 }
 
-void TitleScene::Update() {
+void TitleScene::OnUpdate() {
 
 	// タイトルの上下移動・回転
 	titleTimer_ += 0.03f;
@@ -92,7 +92,7 @@ void TitleScene::Update() {
 	WorldTransformUpdate(worldTransformTitle_);
 }
 
-void TitleScene::Draw() {
+void TitleScene::OnDraw() {
 
 	// 3Dモデル描画前処理
 	Model::PreDraw();
