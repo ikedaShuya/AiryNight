@@ -4,22 +4,20 @@
 using namespace KamataEngine;
 
 void GameOverScene::Initialize() {
-	modelTitle_ = Model::CreateFromOBJ("gameOver", true);
+	modelTitle_.reset(Model::CreateFromOBJ("gameOver", true));
 
 	camera_.Initialize();
 
 	worldTransformTitle_.Initialize();
 	worldTransformTitle_.scale_ = {5.0f, 5.0f, 5.0f};
 
-	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
-	skyDome_ = new SkyDome();
-	skyDome_->Initialize(modelSkyDome_, &camera_);
+	modelSkyDome_.reset(Model::CreateFromOBJ("sky", true));
+	skyDome_ = std::make_unique<SkyDome>();
+	skyDome_->Initialize(modelSkyDome_.get(), &camera_);
 
-	// リトライ案内
-	retrySprite_ = Sprite::Create(TextureManager::Load("gameover_retry.png"), {640.0f, 570.0f});
+	retrySprite_.reset(Sprite::Create(TextureManager::Load("gameover_retry.png"), {640.0f, 570.0f}));
 
-	// 攻略ヒント
-	hintSprite_ = Sprite::Create(TextureManager::Load("gameover_hint.png"), {640.0f, 490.0f});
+	hintSprite_.reset(Sprite::Create(TextureManager::Load("gameover_hint.png"), {640.0f, 490.0f}));
 
 	// 画像の中心を基準にする
 	retrySprite_->SetAnchorPoint({0.5f, 0.5f});
@@ -60,12 +58,4 @@ void GameOverScene::OnDraw() {
 	retrySprite_->Draw();
 
 	Sprite::PostDraw();
-}
-
-GameOverScene::~GameOverScene() { 
-	delete modelTitle_;
-	delete skyDome_;
-	delete modelSkyDome_;
-	delete retrySprite_;
-	delete hintSprite_;
 }

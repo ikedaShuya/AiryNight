@@ -165,6 +165,7 @@
     <ClCompile Include="EnemyManager.cpp" />
     <ClCompile Include="EnemyMovementStrategy.cpp" />
     <ClCompile Include="Fade.cpp" />
+    <ClCompile Include="FadeState.cpp" />
     <ClCompile Include="GameClearEffect.cpp" />
     <ClCompile Include="GameOverEffect.cpp" />
     <ClCompile Include="GameOverScene.cpp" />
@@ -301,6 +302,7 @@
     <ClInclude Include="EnemyMovementStrategy.h" />
     <ClInclude Include="EnemyState.h" />
     <ClInclude Include="Fade.h" />
+    <ClInclude Include="FadeState.h" />
     <ClInclude Include="GameClearEffect.h" />
     <ClInclude Include="GameOverEffect.h" />
     <ClInclude Include="GameOverEffectState.h" />

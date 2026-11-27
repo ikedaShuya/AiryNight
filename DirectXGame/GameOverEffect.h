@@ -22,9 +22,6 @@ public:
 	// 演出中かどうか
 	bool IsPlaying() const { return isPlaying_; }
 
-	// 終了
-	~GameOverEffect() override;
-
 private:
 
 	friend class GameOverEffectFlashState;
@@ -54,5 +51,5 @@ private:
 	float startFovY_ = 0.0f;
 
 	// 暗転用スプライト
-	KamataEngine::Sprite* fadeSprite_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> fadeSprite_;
 };

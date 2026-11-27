@@ -3,6 +3,7 @@
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include <vector>
+#include <memory>
 
 class BlockManager {
 public:
@@ -10,9 +11,9 @@ public:
 	void Generate(MapChipField* mapChipField);
 	void Update();
 	void Draw(const KamataEngine::Camera& camera);
-	~BlockManager();
+	~BlockManager() = default;
 
 private:
 	KamataEngine::Model* model_ = nullptr;
-	std::vector<std::vector<KamataEngine::WorldTransform*>> worldTransforms_;
+	std::vector<std::vector<std::unique_ptr<KamataEngine::WorldTransform>>> worldTransforms_;
 };

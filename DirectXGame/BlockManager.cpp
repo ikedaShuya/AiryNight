@@ -8,12 +8,6 @@ void BlockManager::Initialize(Model* model) { model_ = model; }
 void BlockManager::Generate(MapChipField* mapChipField) {
 
 	// 既存のブロックを削除
-	for (std::vector<WorldTransform*>& line : worldTransforms_) {
-		for (WorldTransform* block : line) {
-			delete block;
-		}
-	}
-
 	worldTransforms_.clear();
 
 	// マップの大きさを取得
@@ -28,10 +22,10 @@ void BlockManager::Generate(MapChipField* mapChipField) {
 		for (uint32_t j = 0; j < numBlockHorizontal; ++j) {
 			if (mapChipField->GetMapChipTypeByIndex(j, i) == MapChipType::kBlock) {
 
-				WorldTransform* worldTransform = new WorldTransform();
+				std::unique_ptr<WorldTransform> worldTransform = std::make_unique<WorldTransform>();
 				worldTransform->Initialize();
 
-				worldTransforms_[i][j] = worldTransform;
+				worldTransforms_[i][j] = std::move(worldTransform);
 				worldTransforms_[i][j]->translation_ = mapChipField->GetMapChipPositionByIndex(j, i);
 			}
 		}
@@ -39,8 +33,8 @@ void BlockManager::Generate(MapChipField* mapChipField) {
 }
 
 void BlockManager::Update() {
-	for (std::vector<WorldTransform*>& line : worldTransforms_) {
-		for (WorldTransform* block : line) {
+	for (std::vector<std::unique_ptr<WorldTransform>>& line : worldTransforms_) {
+		for (std::unique_ptr<WorldTransform>& block : line) {
 			if (!block) {
 				continue;
 			}
@@ -51,8 +45,8 @@ void BlockManager::Update() {
 }
 
 void BlockManager::Draw(const Camera& camera) {
-	for (std::vector<WorldTransform*>& line : worldTransforms_) {
-		for (WorldTransform* block : line) {
+	for (std::vector<std::unique_ptr<WorldTransform>>& line : worldTransforms_) {
+		for (std::unique_ptr<WorldTransform>& block : line) {
 			if (!block) {
 				continue;
 			}
@@ -60,14 +54,4 @@ void BlockManager::Draw(const Camera& camera) {
 			model_->Draw(*block, camera);
 		}
 	}
-}
-
-BlockManager::~BlockManager() {
-	for (std::vector<WorldTransform*>& line : worldTransforms_) {
-		for (WorldTransform* block : line) {
-			delete block;
-		}
-	}
-
-	worldTransforms_.clear();
 }

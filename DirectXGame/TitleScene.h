@@ -24,8 +24,6 @@ public:
 	/// 描画
 	/// </summary>
 	void OnDraw() override;
-
-	~TitleScene() override;
 	
 	// デスフラグのgetter
 	bool IsFinished() const override { return finished_; }
@@ -56,15 +54,15 @@ private:
 	float startTimer_ = 0.0f;
 	bool isStarting_ = false;
 		
-	KamataEngine::Model* modelTitle_ = nullptr;
+	std::unique_ptr<KamataEngine::Model> modelTitle_;
 
-	SkyDome* skyDome_ = nullptr;
+	std::unique_ptr<SkyDome> skyDome_;
 
 	// 3Dモデル
-	KamataEngine::Model* modelSkyDome_ = nullptr;
+	std::unique_ptr<KamataEngine::Model> modelSkyDome_;
 
 	// PRESS SPACE
-	KamataEngine::Sprite* pressSpaceSprite_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> pressSpaceSprite_;
 
 	// 現在の状態
 	std::unique_ptr<TitleSceneState> state_;

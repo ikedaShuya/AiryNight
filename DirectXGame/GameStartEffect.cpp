@@ -39,10 +39,10 @@ void GameStartEffect::ChangeState(std::unique_ptr<GameStartEffectState> newState
 void GameStartEffect::Initialize() {
 
 	// カウントダウン画像を読み込む
-	countdown3Sprite_ = Sprite::Create(TextureManager::Load("countdown_3.png"), {640.0f, 360.0f});
-	countdown2Sprite_ = Sprite::Create(TextureManager::Load("countdown_2.png"), {640.0f, 360.0f});
-	countdown1Sprite_ = Sprite::Create(TextureManager::Load("countdown_1.png"), {640.0f, 360.0f});
-	countdownGoSprite_ = Sprite::Create(TextureManager::Load("countdown_go.png"), {640.0f, 360.0f});
+	countdown3Sprite_.reset(Sprite::Create(TextureManager::Load("countdown_3.png"), {640.0f, 360.0f}));
+	countdown2Sprite_.reset(Sprite::Create(TextureManager::Load("countdown_2.png"), {640.0f, 360.0f}));
+	countdown1Sprite_.reset(Sprite::Create(TextureManager::Load("countdown_1.png"), {640.0f, 360.0f}));
+	countdownGoSprite_.reset(Sprite::Create(TextureManager::Load("countdown_go.png"), {640.0f, 360.0f}));
 
 	// 画像の中心を画面中央に合わせる
 	countdown3Sprite_->SetAnchorPoint({0.5f, 0.5f});
@@ -85,12 +85,4 @@ void GameStartEffect::Draw() {
 	} else if (countdownNumber_ == 4) {
 		countdownGoSprite_->Draw();
 	}
-}
-
-// 終了
-GameStartEffect::~GameStartEffect() {
-	delete countdown3Sprite_;
-	delete countdown2Sprite_;
-	delete countdown1Sprite_;
-	delete countdownGoSprite_;
 }

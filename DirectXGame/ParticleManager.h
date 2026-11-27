@@ -2,6 +2,7 @@
 
 #include "Particle.h"
 #include <vector>
+#include <memory>
 
 class ParticleManager {
 public:
@@ -22,18 +23,12 @@ public:
 	// 描画
 	void Draw();
 
-	// デストラクタ
-	~ParticleManager();
-
 private:
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Camera* camera_ = nullptr;
 
-	// 使用中のパーティクル
-	std::vector<Particle*> particles_;
-
-	// 再利用可能なパーティクル
-	std::vector<Particle*> particlePool_;
+	std::vector<std::unique_ptr<Particle>> particles_;
+	std::vector<std::unique_ptr<Particle>> particlePool_;
 
 	bool isDeathParticle_ = false;
 };

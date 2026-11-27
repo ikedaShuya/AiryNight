@@ -43,8 +43,7 @@ void SceneManager::Draw() {
 void SceneManager::Finalize() {
 
 	// 現在のシーンを解放
-	delete currentScene_;
-	currentScene_ = nullptr;
+	currentScene_.reset();
 }
 
 // シーン終了判定
@@ -77,7 +76,7 @@ void SceneManager::ChangeSceneNow() {
 
 	case SceneType::kGame: {
 
-		GameScene* gameScene = static_cast<GameScene*>(currentScene_);
+		GameScene* gameScene = static_cast<GameScene*>(currentScene_.get());
 
 		if (gameScene->GetResult() == GameResult::Clear) {
 
@@ -123,8 +122,7 @@ void SceneManager::ChangeSceneNow() {
 	}
 
 	// 現在のシーンを削除
-	delete currentScene_;
-	currentScene_ = nullptr;
+	currentScene_.reset();
 
 	// 次のシーンを生成
 	scene_ = nextScene;

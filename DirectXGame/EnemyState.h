@@ -10,18 +10,12 @@ public:
 
 	// 状態更新
 	virtual bool Update(Enemy& enemy, const Player* player) = 0;
-};
 
-// 移動状態
-class EnemyMovingState : public EnemyState {
-public:
-	bool Update(Enemy& enemy, const Player* player) override;
-};
+	// 無敵時間中かどうか
+	virtual bool IsInvincible() const { return false; }
 
-// 待機状態
-class EnemyWaitingState : public EnemyState {
-public:
-	bool Update(Enemy& enemy, const Player* player) override;
+	// 頭の向きを変更するかどうか
+	virtual bool CanTurnHead() const { return false; }
 };
 
 // 落下状態
@@ -34,4 +28,20 @@ public:
 class EnemyDeadState : public EnemyState {
 public:
 	bool Update(Enemy& enemy, const Player* player) override;
+};
+
+class EnemyMovingState : public EnemyState {
+public:
+	bool Update(Enemy& enemy, const Player* player) override;
+
+	bool IsInvincible() const override { return true; }
+
+	bool CanTurnHead() const override { return true; }
+};
+
+class EnemyWaitingState : public EnemyState {
+public:
+	bool Update(Enemy& enemy, const Player* player) override;
+
+	bool IsInvincible() const override { return true; }
 };

@@ -2,6 +2,7 @@
 
 #include "KamataEngine.h"
 #include "PlayerHpObserver.h"
+#include <memory>
 
 class HpBar : public PlayerHpObserver {
 public:
@@ -14,15 +15,13 @@ public:
 	// 描画
 	void Draw();
 
-	~HpBar();
-
 	// HP変更通知を受け取る
 	void OnHpChanged(int hp, int maxHp) override;
 
 private:
 	// HPバーの背景と前景
-	KamataEngine::Sprite* background_ = nullptr;
-	KamataEngine::Sprite* foreground_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> background_;
+	std::unique_ptr<KamataEngine::Sprite> foreground_;
 
 	// テクスチャ
 	uint32_t backgroundTexture_ = 0;

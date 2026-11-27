@@ -3,6 +3,8 @@
 #include "Math.h"
 #include "Character.h"
 #include "PlayerState.h"
+#include "PlayerHpObserver.h"
+#include <vector>
 #include <memory>
 
 class MapChipField;
@@ -59,6 +61,12 @@ public:
 
 	bool IsAttacking() const { return isAttacking_; }
 
+	// 攻撃処理を更新
+	void UpdateAttack() { ProcessAttack(); }
+
+	// 移動・物理処理を更新
+	void UpdateMovement();
+
 	int GetHp() const { return hp_; }
 	int GetMaxHp() const { return maxHp_; }
 
@@ -86,13 +94,17 @@ public:
 		attackTimer_ = 0;
 	}
 
+	// HP監視オブザーバーを登録
+	void AddHpObserver(PlayerHpObserver* observer) {
+		if (observer == nullptr) {
+			return;
+		}
+
+		observers_.push_back(observer);
+		observer->OnHpChanged(hp_, maxHp_);
+	}
+
 private:
-
-	friend class PlayerNormalState;
-	friend class PlayerAttackState;
-	friend class PlayerDeadState;
-
-	void ChangeState(PlayerStateType stateType);
 
 	// ============================
 	// 内部処理
@@ -280,5 +292,7 @@ private:
 
 	// 現在の状態
 	std::unique_ptr<PlayerState> state_;
-	PlayerStateType stateType_ = PlayerStateType::kNormal;
+
+	// HP監視オブザーバー
+	std::vector<PlayerHpObserver*> observers_;
 };

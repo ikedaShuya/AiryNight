@@ -1,4 +1,3 @@
-
 #include "GameScene.h"
 #include "Math.h"
 
@@ -9,85 +8,91 @@
 using namespace KamataEngine;
 
 // ゲーム開始演出中
-void GameSceneStartState::Update(GameScene& gameScene) {
+void GameSceneStartState::Update(GameScene& gameScene) { gameScene.UpdateStartState(); }
 
-	gameScene.gameStartEffect_.Update();
+// ゲームプレイ中
+void GameScenePlayingState::Update(GameScene& gameScene) { gameScene.UpdatePlayingState(); }
 
-	gameScene.skyDome_->Update();
-	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
+// ゲームオーバー演出中
+void GameSceneGameOverState::Update(GameScene& gameScene) { gameScene.UpdateGameOverState(); }
 
-	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
+// ゲームクリア演出中
+void GameSceneClearState::Update(GameScene& gameScene) { gameScene.UpdateClearState(); }
 
-	gameScene.CController_->Update();
-	gameScene.blockManager_.Update();
-	gameScene.player_->Update();
+// ゲーム開始演出中の処理
+void GameScene::UpdateStartState() {
+
+	gameStartEffect_.Update();
+
+	skyDome_->Update();
+
+	defeatedEnemyCount_ += enemyManager_.RemoveDeadEnemies();
+
+	CController_->Update();
+	blockManager_.Update();
+	player_->Update();
 
 	// 演出が終わったら操作を許可してプレイ状態へ
-	if (gameScene.gameStartEffect_.IsFinished()) {
-		gameScene.player_->SetControllable(true);
-		gameScene.playTimer_++;
-		gameScene.ChangeState(std::make_unique<GameScenePlayingState>());
+	if (gameStartEffect_.IsFinished()) {
+		player_->SetControllable(true);
+		playTimer_++;
+		ChangeState(std::make_unique<GameScenePlayingState>());
 	}
 }
 
-// ゲームプレイ中
-void GameScenePlayingState::Update(GameScene& gameScene) {
+// ゲームプレイ中の処理
+void GameScene::UpdatePlayingState() {
 
 	// プレイヤー死亡判定
-	if (gameScene.player_->GetHp() <= 0) {
-		gameScene.gameOverEffect_.Start(gameScene.camera_);
-		gameScene.player_->SetControllable(false);
-		gameScene.ChangeState(std::make_unique<GameSceneGameOverState>());
+	if (player_->GetHp() <= 0) {
+		gameOverEffect_.Start(camera_);
+		player_->SetControllable(false);
+		ChangeState(std::make_unique<GameSceneGameOverState>());
 		return;
 	}
 
 	// ゴール判定
-	Vector3 playerPosition = gameScene.player_->GetWorldPosition();
+	Vector3 playerPosition = player_->GetWorldPosition();
 
-	if (gameScene.goal_.IsPlayerInGoalRange(playerPosition)) {
-		gameScene.gameClearEffect_.Start();
-		gameScene.player_->SetControllable(false);
-		gameScene.ChangeState(std::make_unique<GameSceneClearState>());
+	if (goal_.IsPlayerInGoalRange(playerPosition)) {
+		gameClearEffect_.Start();
+		player_->SetControllable(false);
+		ChangeState(std::make_unique<GameSceneClearState>());
 		return;
 	}
 
-	gameScene.playTimer_++;
+	playTimer_++;
 
-	gameScene.skyDome_->Update();
-	gameScene.hpBar_.Update(gameScene.player_->GetHp(), gameScene.player_->GetMaxHp());
+	skyDome_->Update();
 
-	gameScene.defeatedEnemyCount_ += gameScene.enemyManager_.RemoveDeadEnemies();
+	defeatedEnemyCount_ += enemyManager_.RemoveDeadEnemies();
 
-	gameScene.CController_->Update();
-	gameScene.blockManager_.Update();
+	CController_->Update();
+	blockManager_.Update();
 
-	gameScene.player_->Update();
+	player_->Update();
 
-	gameScene.enemyManager_.Update(gameScene.player_);
+	enemyManager_.Update(player_.get());
 
 	// 全ての当たり判定を行う
-	gameScene.collisionManager_.CheckAllCollisions(
-		gameScene.player_,
-		gameScene.enemyManager_.GetEnemies(),
-		&gameScene.particleManager_,
-		&gameScene.deathParticleManager_);
+	collisionManager_.CheckAllCollisions(player_.get(), enemyManager_.GetEnemies(), &particleManager_, &deathParticleManager_);
 }
 
-// ゲームオーバー演出中
-void GameSceneGameOverState::Update(GameScene& gameScene) {
+// ゲームオーバー演出中の処理
+void GameScene::UpdateGameOverState() {
 
-	if (gameScene.gameOverEffect_.Update(gameScene.camera_)) {
-		gameScene.result_ = GameResult::GameOver;
-		gameScene.finished_ = true;
+	if (gameOverEffect_.Update(camera_)) {
+		result_ = GameResult::GameOver;
+		finished_ = true;
 	}
 }
 
-// ゲームクリア演出中
-void GameSceneClearState::Update(GameScene& gameScene) {
+// ゲームクリア演出中の処理
+void GameScene::UpdateClearState() {
 
-	if (gameScene.gameClearEffect_.Update()) {
-		gameScene.result_ = GameResult::Clear;
-		gameScene.finished_ = true;
+	if (gameClearEffect_.Update()) {
+		result_ = GameResult::Clear;
+		finished_ = true;
 	}
 }
 
@@ -95,8 +100,7 @@ void GameSceneClearState::Update(GameScene& gameScene) {
 void GameScene::ChangeState(std::unique_ptr<GameSceneState> newState) {
 	if (!state_) {
 		state_ = std::move(newState);
-	}
-	else {
+	} else {
 		nextState_ = std::move(newState);
 	}
 }
@@ -121,7 +125,7 @@ void GameScene::Initialize(int stageNumber) {
 	// 敵撃破用の立体パーティクルを初期化
 	deathParticleManager_.Initialize(modelBlock_, &camera_, true);
 
-	mapChipField_ = new MapChipField;
+	mapChipField_ = std::make_unique<MapChipField>();
 
 	stageMapLoader_.LoadMap(stageNumber_, *mapChipField_);
 
@@ -138,7 +142,7 @@ void GameScene::Initialize(int stageNumber) {
 	swordModel_ = Model::CreateFromOBJ("sword", true);
 
 	// 自キャラの生成
-	player_ = new Player();
+	player_ = std::make_unique<Player>();
 
 	// プレイヤーの配置を読み込む
 	stageDataLoader_.LoadPlayerPosition(stageNumber_, stagePlacementData_);
@@ -148,7 +152,7 @@ void GameScene::Initialize(int stageNumber) {
 	// 自キャラの初期化
 	player_->Initialize(modelPlayer_, swordModel_, &camera_, playerPosition);
 
-	player_->SetMapChipField(mapChipField_);
+	player_->SetMapChipField(mapChipField_.get());
 
 	// ゲーム開始演出中は操作できないようにする
 	player_->SetControllable(false);
@@ -163,23 +167,26 @@ void GameScene::Initialize(int stageNumber) {
 	GenerateEnemies();
 
 	// カメラコントローラの初期化
-	CController_ = new CameraController();
+	CController_ = std::make_unique<CameraController>();
 	CController_->Initialize(&camera_);
-	CController_->SetTarget(player_);
+	CController_->SetTarget(player_.get());
 	CController_->Reset();
 
 	// 移動範囲の指定
-	CameraController::Rect cameraArea = { 10.556f, 100 - 12.0f, 11.0f, 13.3f };
+	CameraController::Rect cameraArea = {10.556f, 100 - 12.0f, 11.0f, 13.3f};
 	CController_->SetMovableArea(cameraArea);
 
 	// HPバー関連の処理の初期化
 	hpBar_.Initialize();
 
+	// HPバーをオブザーバーとして登録
+	player_->AddHpObserver(&hpBar_);
+
 	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
-	skyDome_ = new SkyDome();
+	skyDome_ = std::make_unique<SkyDome>();
 	skyDome_->Initialize(modelSkyDome_, &camera_);
 
-	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), { 960.0f, 0.0f });
+	aSprite_ = Sprite::Create(TextureManager::Load("a.png"), {960.0f, 0.0f});
 
 	// エフェクトを基底クラスのポインタに登録
 	effects_[0] = &gameOverEffect_;
@@ -199,7 +206,8 @@ void GameScene::OnUpdate() {
 
 #ifdef USE_IMGUI
 	mapEditorController_.Update(
-		mapEditor_, stageNumber_, stagePlacementData_, stageDataLoader_, stageMapLoader_, stagePlacementDataSaver_, blockManager_, enemyManager_, goal_, player_, mapChipField_, CController_);
+	    mapEditor_, stageNumber_, stagePlacementData_, stageDataLoader_, stageMapLoader_, stagePlacementDataSaver_, blockManager_, enemyManager_, goal_, player_.get(), mapChipField_.get(),
+	    CController_.get());
 #endif
 
 	// マップ編集中はゲームの進行を停止する
@@ -267,33 +275,18 @@ void GameScene::OnDraw() {
 
 GameScene::~GameScene() {
 
-	// カメラコントローラの解放
-	delete CController_;
-
-	// 自キャラの解放
-	delete player_;
-
-	// マップチップフィールドの解放
-	delete mapChipField_;
-
 	// モデルデータの解放
 	delete swordModel_;
 	delete modelPlayer_;
 	delete modelBlock_;
 	delete modelParticle_;
 
-	// スカイドームの解放
-	delete skyDome_;
 	delete modelSkyDome_;
 
 	// スプライトの解放
 	delete aSprite_;
 }
 
-void GameScene::GenerateBlocks() {
-	blockManager_.Generate(mapChipField_);
-}
+void GameScene::GenerateBlocks() { blockManager_.Generate(mapChipField_.get()); }
 
-void GameScene::GenerateEnemies() {
-	enemyManager_.Generate(stagePlacementData_, mapChipField_);
-}
+void GameScene::GenerateEnemies() { enemyManager_.Generate(stagePlacementData_, mapChipField_.get()); }

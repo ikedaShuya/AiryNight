@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Scene.h"
+#include <memory>
 
 // シーンの種類
 enum class SceneType {
@@ -21,7 +22,7 @@ struct SceneCreateData {
 // シーン生成を担当する基底クラス
 class SceneFactory {
 public:
-	virtual Scene* CreateScene(SceneType sceneType, const SceneCreateData& data) = 0;
+	virtual std::unique_ptr<Scene> CreateScene(SceneType sceneType, const SceneCreateData& data) = 0;
 
 	virtual ~SceneFactory() = default;
 };
@@ -29,5 +30,5 @@ public:
 // AiryNight用のシーン生成クラス
 class AiryNightSceneFactory : public SceneFactory {
 public:
-	Scene* CreateScene(SceneType sceneType, const SceneCreateData& data) override;
+	std::unique_ptr<Scene> CreateScene(SceneType sceneType, const SceneCreateData& data) override;
 };

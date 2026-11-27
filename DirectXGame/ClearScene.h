@@ -27,8 +27,6 @@ public:
 	/// </summary>
 	void OnDraw() override;
 
-	~ClearScene() override;
-
 	bool IsFinished() const override { return finished_; }
 
 private:
@@ -55,50 +53,39 @@ private:
 	int defeatedEnemyCount_ = 0;
 
 	// 敵の撃破数表示用
-	KamataEngine::Sprite* defeatedCountSprites_[2] = {};
+	std::unique_ptr<KamataEngine::Sprite> defeatedCountSprites_[2];
 
 	// 撃破数の数字
 	int defeatedCountDigits_[2] = {};
 
 	// リザルト項目名の画像
-	KamataEngine::Sprite* resultStageSprite_ = nullptr;
-	KamataEngine::Sprite* resultTimeSprite_ = nullptr;
-	KamataEngine::Sprite* resultDefeatedSprite_ = nullptr;
-	KamataEngine::Sprite* resultPanelSprite_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> resultStageSprite_;
+	std::unique_ptr<KamataEngine::Sprite> resultTimeSprite_;
+	std::unique_ptr<KamataEngine::Sprite> resultDefeatedSprite_;
+	std::unique_ptr<KamataEngine::Sprite> resultPanelSprite_;
 
-	// ステージ番号の画像
-	KamataEngine::Sprite* stageNumberSprite_ = nullptr;
-
-	// プレイ時間表示用
-	KamataEngine::Sprite* timeSprites_[4] = {};
+	std::unique_ptr<KamataEngine::Sprite> stageNumberSprite_;
+	std::unique_ptr<KamataEngine::Sprite> timeSprites_[4];
+	std::unique_ptr<KamataEngine::Sprite> timeColonSprite_;
+	std::unique_ptr<KamataEngine::Sprite> timeColonDot2Sprite_;
 
 	// 時間の数字
 	int timeDigits_[4] = {};
-
-	// コロン表示用
-	KamataEngine::Sprite* timeColonSprite_ = nullptr;
-
-	KamataEngine::Sprite* timeColonDot2Sprite_ = nullptr;
 
 	KamataEngine::Camera camera_;
 
 	KamataEngine::WorldTransform worldTransformTitle_;
 
-	KamataEngine::Model* modelTitle_ = nullptr;
-
-	SkyDome* skyDome_ = nullptr;
-
-	// 3Dモデル
-	KamataEngine::Model* modelSkyDome_ = nullptr;
+	std::unique_ptr<KamataEngine::Model> modelTitle_;
+	std::unique_ptr<SkyDome> skyDome_;
+	std::unique_ptr<KamataEngine::Model> modelSkyDome_;
+	std::unique_ptr<KamataEngine::Sprite> pressSpaceSprite_;
 
 	// クリア演出
 	ClearSceneEffect clearSceneEffect_;
 
 	// エフェクトの基底クラスのポインタ
 	Effect* effect_ = nullptr;
-
-	// PRESS SPACEのスプライト
-	KamataEngine::Sprite* pressSpaceSprite_ = nullptr;
 
 	// 現在の状態
 	std::unique_ptr<ClearSceneState> state_;

@@ -32,7 +32,7 @@ void GameOverEffect::ChangeState(std::unique_ptr<GameOverEffectState> newState) 
 
 // 初期化
 void GameOverEffect::Initialize() {
-	fadeSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f});
+	fadeSprite_.reset(Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f}));
 
 	fadeSprite_->SetSize({1280.0f, 720.0f});
 	fadeSprite_->SetColor({0.0f, 0.0f, 0.0f, 0.0f});
@@ -91,6 +91,3 @@ void GameOverEffect::Draw() {
 		fadeSprite_->Draw();
 	}
 }
-
-// 終了
-GameOverEffect::~GameOverEffect() { delete fadeSprite_; }

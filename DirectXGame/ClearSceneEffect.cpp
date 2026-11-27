@@ -7,7 +7,7 @@ using namespace KamataEngine;
 void ClearSceneEffect::Initialize() {
 
 	// フラッシュ用スプライト
-	clearFlashSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f});
+	clearFlashSprite_.reset(Sprite::Create(TextureManager::Load("white1x1.png"), {0.0f, 0.0f}));
 	clearFlashSprite_->SetSize({1280.0f, 720.0f});
 	clearFlashSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
 
@@ -16,7 +16,7 @@ void ClearSceneEffect::Initialize() {
 
 	for (int i = 0; i < kClearParticleCount; i++) {
 
-		clearParticles_[i] = Sprite::Create(particleTexture, {634.0f, 354.0f});
+		clearParticles_[i].reset(Sprite::Create(particleTexture, {634.0f, 354.0f}));
 		clearParticles_[i]->SetSize({24.0f, 24.0f});
 		clearParticles_[i]->SetColor({1.0f, 0.8f, 0.3f, 0.0f});
 
@@ -99,14 +99,5 @@ void ClearSceneEffect::Draw() {
 		for (int i = 0; i < kClearParticleCount; i++) {
 			clearParticles_[i]->Draw();
 		}
-	}
-}
-
-ClearSceneEffect::~ClearSceneEffect() {
-
-	delete clearFlashSprite_;
-
-	for (int i = 0; i < kClearParticleCount; i++) {
-		delete clearParticles_[i];
 	}
 }

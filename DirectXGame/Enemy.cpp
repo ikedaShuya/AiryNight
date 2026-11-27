@@ -7,40 +7,56 @@
 using namespace KamataEngine;
 
 // 移動状態
-bool EnemyMovingState::Update(Enemy& enemy, const Player* player) {
-	(void)player;
+bool EnemyMovingState::Update(Enemy& enemy, const Player* player) { return enemy.UpdateMovingState(player); }
 
-	enemy.stateTimer_ += 1.0f / 60.0f;
+// 移動状態の処理
+bool Enemy::UpdateMovingState(const Player* player) {
 
-	Vector3 totalVelocity = enemy.velocity_ + enemy.knockbackVelocity_;
+	stateTimer_ += 1.0f / 60.0f;
+
+	Vector3 totalVelocity = velocity_ + knockbackVelocity_;
+	totalVelocity.x = GetMoveVelocityX(player) + knockbackVelocity_.x;
 
 	// 壁との当たり判定
 	float moveX = totalVelocity.x;
-	enemy.CheckMapCollisionX(moveX);
+	CheckMapCollisionX(moveX);
 
 	// 壁にぶつかった場合
 	if (moveX != totalVelocity.x) {
-		enemy.velocity_.x *= -1.0f;
-		enemy.knockbackVelocity_.x = 0.0f;
+		OnMovementWallHit();
+		knockbackVelocity_.x = 0.0f;
 	}
 
 	// 床がなくなる場合
-	if (!enemy.HasFloorAhead(moveX)) {
-		enemy.fallSpeed_ = 0.0f;
-		enemy.knockbackVelocity_.x = 0.0f;
-		enemy.ChangeState(std::make_unique<EnemyFallingState>());
+	if (!HasFloorAhead(moveX)) {
+		fallSpeed_ = 0.0f;
+		knockbackVelocity_.x = 0.0f;
+		ChangeState(std::make_unique<EnemyFallingState>());
 	}
 
 	// 移動
-	enemy.worldTransform_.translation_.x += moveX;
-	enemy.worldTransform_.translation_.y += totalVelocity.y;
+	worldTransform_.translation_.x += moveX;
+	worldTransform_.translation_.y += totalVelocity.y;
 
 	// ノックバック減衰
-	enemy.knockbackVelocity_.x *= enemy.kKnockbackAttenuation;
+	knockbackVelocity_.x *= kKnockbackAttenuation;
 
 	// 移動時間終了したら待機へ
-	if (enemy.stateTimer_ >= enemy.moveDuration_) {
-		enemy.ChangeState(std::make_unique<EnemyWaitingState>());
+	if (stateTimer_ >= moveDuration_) {
+		ChangeState(std::make_unique<EnemyWaitingState>());
+	}
+
+	return true;
+}
+
+// 待機状態の処理
+bool Enemy::UpdateWaitingState() {
+
+	stateTimer_ += 1.0f / 60.0f;
+
+	// 待機時間終了したら移動へ戻る
+	if (stateTimer_ >= waitDuration_) {
+		ChangeState(std::make_unique<EnemyMovingState>());
 	}
 
 	return true;
@@ -49,52 +65,43 @@ bool EnemyMovingState::Update(Enemy& enemy, const Player* player) {
 // 待機状態
 bool EnemyWaitingState::Update(Enemy& enemy, const Player* player) {
 	(void)player;
-
-	enemy.stateTimer_ += 1.0f / 60.0f;
-
-	// 待機時間終了したら移動へ戻る
-	if (enemy.stateTimer_ >= enemy.waitDuration_) {
-		enemy.ChangeState(std::make_unique<EnemyMovingState>());
-	}
-
-	return true;
+	return enemy.UpdateWaitingState();
 }
 
-// 落下状態
-bool EnemyFallingState::Update(Enemy& enemy, const Player* player) {
-	(void)player;
+// 落下状態の処理
+bool Enemy::UpdateFallingState() {
 
 	// 重力で落下
-	enemy.fallSpeed_ -= enemy.kGravity;
+	fallSpeed_ -= kGravity;
 
-	float currentY = enemy.worldTransform_.translation_.y;
-	float nextY = currentY + enemy.fallSpeed_;
+	float currentY = worldTransform_.translation_.y;
+	float nextY = currentY + fallSpeed_;
 
-	float currentBottom = currentY - enemy.kHeight / 2.0f;
-	float nextBottom = nextY - enemy.kHeight / 2.0f;
+	float currentBottom = currentY - kHeight / 2.0f;
+	float nextBottom = nextY - kHeight / 2.0f;
 
 	bool landed = false;
 
-	if (enemy.mapChipField_) {
-		for (uint32_t y = 0; y < enemy.mapChipField_->GetNumBlockVertical(); ++y) {
-			for (uint32_t x = 0; x < enemy.mapChipField_->GetNumBlockHorizontal(); ++x) {
+	if (mapChipField_) {
+		for (uint32_t y = 0; y < mapChipField_->GetNumBlockVertical(); ++y) {
+			for (uint32_t x = 0; x < mapChipField_->GetNumBlockHorizontal(); ++x) {
 
-				if (enemy.mapChipField_->GetMapChipTypeByIndex(x, y) != MapChipType::kBlock) {
+				if (mapChipField_->GetMapChipTypeByIndex(x, y) != MapChipType::kBlock) {
 					continue;
 				}
 
-				MapChipField::Rect rect = enemy.mapChipField_->GetRectByIndex(x, y);
+				MapChipField::Rect rect = mapChipField_->GetRectByIndex(x, y);
 
-				float enemyLeft = enemy.worldTransform_.translation_.x - enemy.kWidth / 2.0f;
-				float enemyRight = enemy.worldTransform_.translation_.x + enemy.kWidth / 2.0f;
+				float enemyLeft = worldTransform_.translation_.x - kWidth / 2.0f;
+				float enemyRight = worldTransform_.translation_.x + kWidth / 2.0f;
 
 				if (enemyRight <= rect.left || enemyLeft >= rect.right) {
 					continue;
 				}
 
 				if (currentBottom >= rect.top && nextBottom <= rect.top) {
-					enemy.worldTransform_.translation_.y = rect.top + enemy.kHeight / 2.0f;
-					enemy.fallSpeed_ = 0.0f;
+					worldTransform_.translation_.y = rect.top + kHeight / 2.0f;
+					fallSpeed_ = 0.0f;
 					landed = true;
 					break;
 				}
@@ -108,25 +115,33 @@ bool EnemyFallingState::Update(Enemy& enemy, const Player* player) {
 
 	// 着地していなければ落下を続ける
 	if (!landed) {
-		enemy.worldTransform_.translation_.y = nextY;
+		worldTransform_.translation_.y = nextY;
 	} else {
-		enemy.ChangeState(std::make_unique<EnemyMovingState>());
+		ChangeState(std::make_unique<EnemyMovingState>());
 	}
 
 	// マップの外まで落ちた場合
-	if (enemy.worldTransform_.translation_.y < -10.0f) {
-		enemy.isDead_ = true;
-		enemy.ChangeState(std::make_unique<EnemyDeadState>());
+	if (worldTransform_.translation_.y < -10.0f) {
+		isDead_ = true;
+		ChangeState(std::make_unique<EnemyDeadState>());
 	}
 
 	return false;
 }
 
+// 落下状態
+bool EnemyFallingState::Update(Enemy& enemy, const Player* player) {
+	(void)player;
+	return enemy.UpdateFallingState();
+}
+
+// 死亡状態の処理
+bool Enemy::UpdateDeadState() { return false; }
+
 // 死亡状態
 bool EnemyDeadState::Update(Enemy& enemy, const Player* player) {
-	(void)enemy;
 	(void)player;
-	return false;
+	return enemy.UpdateDeadState();
 }
 
 void Enemy::ChangeState(std::unique_ptr<EnemyState> newState) {
@@ -163,7 +178,7 @@ void Enemy::Update(const Player* player) {
 	}
 
 	// 無敵時間カウント
-	if (dynamic_cast<EnemyFallingState*>(state_.get()) == nullptr && dynamic_cast<EnemyDeadState*>(state_.get()) == nullptr) {
+	if (state_->IsInvincible()) {
 		if (invincibleTimer_ > 0) {
 			invincibleTimer_--;
 		}
@@ -178,7 +193,7 @@ void Enemy::Update(const Player* player) {
 	}
 
 	// 首フリフリ等の処理
-	if (dynamic_cast<EnemyMovingState*>(state_.get()) != nullptr && std::abs(knockbackVelocity_.x) < 0.01f) {
+	if (state_->CanTurnHead() && std::abs(knockbackVelocity_.x) < 0.01f) {
 
 		const float t = stateTimer_;
 		const float baseAngle = -1.5f;

@@ -39,7 +39,7 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 	defeatedEnemyCount_ = defeatedEnemyCount;
 
-	modelTitle_ = Model::CreateFromOBJ("clear", true);
+	modelTitle_.reset(Model::CreateFromOBJ("clear", true));
 
 	camera_.Initialize();
 
@@ -50,9 +50,9 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 	// 最初は小さいサイズにする
 	worldTransformTitle_.scale_ = {0.1f, 0.1f, 0.1f};
 
-	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
-	skyDome_ = new SkyDome();
-	skyDome_->Initialize(modelSkyDome_, &camera_);
+	modelSkyDome_.reset(Model::CreateFromOBJ("sky", true));
+	skyDome_ = std::make_unique<SkyDome>();
+	skyDome_->Initialize(modelSkyDome_.get(), &camera_);
 
 	// ステージ番号に対応した画像を選択
 	const char* textureFileName = "countdown_0.png";
@@ -79,27 +79,27 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 	state_ = std::make_unique<ClearSceneEffectState>();
 
 	// リザルト情報の背景パネル
-	resultPanelSprite_ = Sprite::Create(TextureManager::Load("white1x1.png"), {390.0f, 300.0f});
+	resultPanelSprite_.reset(Sprite::Create(TextureManager::Load("white1x1.png"), {390.0f, 300.0f}));
 	resultPanelSprite_->SetSize({500.0f, 320.0f});
 	resultPanelSprite_->SetColor({0.03f, 0.06f, 0.12f, 0.90f});
 
 	// リザルト項目名のスプライトを生成
-	resultStageSprite_ = Sprite::Create(TextureManager::Load("result_stage.png"), {400.0f, 100.0f});
+	resultStageSprite_.reset(Sprite::Create(TextureManager::Load("result_stage.png"), {400.0f, 100.0f}));
 	resultStageSprite_->SetSize({160.0f, 40.0f});
 
-	resultTimeSprite_ = Sprite::Create(TextureManager::Load("result_time.png"), {540.0f, 390.0f});
+	resultTimeSprite_.reset(Sprite::Create(TextureManager::Load("result_time.png"), {540.0f, 390.0f}));
 	resultTimeSprite_->SetSize({200.0f, 50.0f});
 
-	resultDefeatedSprite_ = Sprite::Create(TextureManager::Load("result_defeated.png"), {480.0f, 545.0f});
+	resultDefeatedSprite_.reset(Sprite::Create(TextureManager::Load("result_defeated.png"), {480.0f, 545.0f}));
 	resultDefeatedSprite_->SetSize({320.0f, 50.0f});
 
 	// PRESS SPACEのスプライトを生成
-	pressSpaceSprite_ = Sprite::Create(TextureManager::Load("pressSpace.png"), {384.0f, 560.0f});
+	pressSpaceSprite_.reset(Sprite::Create(TextureManager::Load("pressSpace.png"), {384.0f, 560.0f}));
 	pressSpaceSprite_->SetSize({512.0f, 128.0f});
 	pressSpaceSprite_->SetColor({1.0f, 1.0f, 1.0f, 0.0f});
 
 	// ステージ番号のスプライトを生成
-	stageNumberSprite_ = Sprite::Create(TextureManager::Load(textureFileName), {590.0f, 80.0f});
+	stageNumberSprite_.reset(Sprite::Create(TextureManager::Load(textureFileName), {590.0f, 80.0f}));
 
 	// サイズを設定
 	stageNumberSprite_->SetSize({100.0f, 100.0f});
@@ -130,7 +130,7 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 	// 数字スプライトを生成
 	for (int i = 0; i < 4; i++) {
-		timeSprites_[i] = Sprite::Create(TextureManager::Load(digitTextureNames[timeDigits_[i]]), {digitPositions[i], 455.0f});
+		timeSprites_[i].reset(Sprite::Create(TextureManager::Load(digitTextureNames[timeDigits_[i]]), {digitPositions[i], 455.0f}));
 
 		timeSprites_[i]->SetSize({60.0f, 80.0f});
 	}
@@ -138,10 +138,10 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 	// コロンを白い四角2つで作る
 	uint32_t colonTexture = TextureManager::Load("white1x1.png");
 
-	timeColonSprite_ = Sprite::Create(colonTexture, {625.0f, 480.0f});
+	timeColonSprite_.reset(Sprite::Create(colonTexture, {625.0f, 480.0f}));
 	timeColonSprite_->SetSize({8.0f, 8.0f});
 
-	timeColonDot2Sprite_ = Sprite::Create(colonTexture, {625.0f, 505.0f});
+	timeColonDot2Sprite_.reset(Sprite::Create(colonTexture, {625.0f, 505.0f}));
 	timeColonDot2Sprite_->SetSize({8.0f, 8.0f});
 
 	// 敵の撃破数を2桁に分解
@@ -156,7 +156,7 @@ void ClearScene::Initialize(int stageNumber, int playTimer, int defeatedEnemyCou
 
 	// 撃破数の数字スプライトを生成
 	for (int i = 0; i < 2; i++) {
-		defeatedCountSprites_[i] = Sprite::Create(TextureManager::Load(digitTextureNames[defeatedCountDigits_[i]]), {570.0f + i * 70.0f, 600.0f});
+		defeatedCountSprites_[i].reset(Sprite::Create(TextureManager::Load(digitTextureNames[defeatedCountDigits_[i]]), {570.0f + i * 70.0f, 600.0f}));
 
 		defeatedCountSprites_[i]->SetSize({50.0f, 65.0f});
 	}
@@ -276,31 +276,4 @@ void ClearScene::OnDraw() {
 	timeColonDot2Sprite_->Draw();
 
 	Sprite::PostDraw();
-}
-
-ClearScene::~ClearScene() {
-	delete modelTitle_;
-	delete skyDome_;
-	delete modelSkyDome_;
-	delete stageNumberSprite_;
-
-	// プレイ時間表示用スプライトを解放
-	for (int i = 0; i < 4; i++) {
-		delete timeSprites_[i];
-	}
-
-	delete timeColonSprite_;
-	delete timeColonDot2Sprite_;
-
-	// 敵の撃破数表示用スプライトを解放
-	for (int i = 0; i < 2; i++) {
-		delete defeatedCountSprites_[i];
-	}
-
-	delete resultPanelSprite_;
-
-	delete resultStageSprite_;
-	delete resultTimeSprite_;
-	delete resultDefeatedSprite_;
-	delete pressSpaceSprite_;
 }

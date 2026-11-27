@@ -33,7 +33,7 @@ void TitleScene::ChangeState(std::unique_ptr<TitleSceneState> newState) { nextSt
 
 void TitleScene::Initialize() {
 
-	modelTitle_ = Model::CreateFromOBJ("title", true);
+	modelTitle_.reset(Model::CreateFromOBJ("title", true));
 
 	// カメラ初期化
 	camera_.Initialize();
@@ -41,13 +41,13 @@ void TitleScene::Initialize() {
 	worldTransformTitle_.Initialize();
 	worldTransformTitle_.scale_ = {1.5f, 1.5f, 1.5f};
 
-	modelSkyDome_ = Model::CreateFromOBJ("sky", true);
-	skyDome_ = new SkyDome();
-	skyDome_->Initialize(modelSkyDome_, &camera_);
+	modelSkyDome_.reset(Model::CreateFromOBJ("sky", true));
+	skyDome_ = std::make_unique<SkyDome>();
+	skyDome_->Initialize(modelSkyDome_.get(), &camera_);
 
 	// PRESS SPACE
 	uint32_t textureHandle = TextureManager::Load("pressSpace.png");
-	pressSpaceSprite_ = Sprite::Create(textureHandle, {384.0f, 560.0f});
+	pressSpaceSprite_.reset(Sprite::Create(textureHandle, {384.0f, 560.0f}));
 
 	// タイトル待機状態にする
 	state_ = std::make_unique<TitleSceneIdleState>();
@@ -113,11 +113,4 @@ void TitleScene::OnDraw() {
 
 	// 2Dスプライト描画後処理
 	Sprite::PostDraw();
-}
-
-TitleScene::~TitleScene() {
-	delete modelTitle_;
-	delete skyDome_;
-	delete modelSkyDome_;
-	delete pressSpaceSprite_;
 }

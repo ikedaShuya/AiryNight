@@ -58,16 +58,17 @@ public:
 	// 敵の撃破数を取得
 	int GetDefeatedEnemyCount() const { return defeatedEnemyCount_; }
 
+	// 各ゲームシーン状態から呼び出す処理
+	void UpdateStartState();
+	void UpdatePlayingState();
+	void UpdateGameOverState();
+	void UpdateClearState();
+
 private:
 
 	// ============================
 	// 内部処理
 	// ============================
-
-	friend class GameSceneStartState;
-	friend class GameScenePlayingState;
-	friend class GameSceneGameOverState;
-	friend class GameSceneClearState;
 
 	// 状態変更
 	void ChangeState(std::unique_ptr<GameSceneState> newState);
@@ -118,19 +119,19 @@ private:
 	KamataEngine::Model* modelParticle_ = nullptr;
 
 	// マップチップフィールド
-	MapChipField* mapChipField_ = nullptr;
+	std::unique_ptr<MapChipField> mapChipField_;
 
 	// 自キャラ
-	Player* player_ = nullptr;
+	std::unique_ptr<Player> player_;
 
 	// 3Dモデルデータ
 	KamataEngine::Model* modelPlayer_ = nullptr;
 
-	CameraController* CController_ = nullptr;
+	std::unique_ptr<CameraController> CController_;
 
 	KamataEngine::Model* swordModel_ = nullptr;
 
-	SkyDome* skyDome_ = nullptr;
+	std::unique_ptr<SkyDome> skyDome_;
 
 	// 3Dモデル
 	KamataEngine::Model* modelSkyDome_ = nullptr;

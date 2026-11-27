@@ -6,8 +6,8 @@ void HpBar::Initialize() {
 	backgroundTexture_ = TextureManager::Load("hp_bar_bg.png");
 	foregroundTexture_ = TextureManager::Load("hp_bar_fg.png");
 
-	background_ = Sprite::Create(backgroundTexture_, {70.0f, 10.0f});
-	foreground_ = Sprite::Create(foregroundTexture_, {70.0f, 10.0f});
+	background_.reset(Sprite::Create(backgroundTexture_, {70.0f, 10.0f}));
+	foreground_.reset(Sprite::Create(foregroundTexture_, {70.0f, 10.0f}));
 
 	background_->SetPosition({90.0f, 20.0f});
 	foreground_->SetPosition({90.0f, 20.0f});
@@ -28,11 +28,6 @@ void HpBar::Update(int hp, int maxHp) {
 void HpBar::Draw() {
 	background_->Draw();
 	foreground_->Draw();
-}
-
-HpBar::~HpBar() {
-	delete background_;
-	delete foreground_;
 }
 
 void HpBar::OnHpChanged(int hp, int maxHp) { Update(hp, maxHp); }

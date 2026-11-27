@@ -14,13 +14,14 @@ bool CollisionManager::IsCharacterCollision(const Character& characterA, const C
 	return IsCollision(aabbA, aabbB);
 }
 
-void CollisionManager::CheckAllCollisions(Player* player, const std::list<Enemy*>& enemies, ParticleManager* particleManager, ParticleManager* deathParticleManager) {
+void CollisionManager::CheckAllCollisions(Player* player, const std::list<std::unique_ptr<Enemy>>& enemies, ParticleManager* particleManager, ParticleManager* deathParticleManager) {
 
 	if (!player) {
 		return;
 	}
 
-	for (Enemy* enemy : enemies) {
+	for (const std::unique_ptr<Enemy>& enemyPtr : enemies) {
+		Enemy* enemy = enemyPtr.get();
 		if (!enemy) {
 			continue;
 		}
@@ -38,7 +39,8 @@ void CollisionManager::CheckAllCollisions(Player* player, const std::list<Enemy*
 
 	AABB attackAABB = player->GetSwordAABB();
 
-	for (Enemy* enemy : enemies) {
+	for (const std::unique_ptr<Enemy>& enemyPtr : enemies) {
+		Enemy* enemy = enemyPtr.get();
 		if (!enemy) {
 			continue;
 		}

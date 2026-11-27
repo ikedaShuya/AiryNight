@@ -3,6 +3,7 @@
 #include "Math.h"
 #include "SkyDome.h"
 #include "Scene.h"
+#include <memory>
 
 class GameOverScene : public Scene {
 public:
@@ -21,8 +22,6 @@ public:
 	/// </summary>
 	void OnDraw() override;
 
-	~GameOverScene() override;
-
 	bool IsFinished() const override { return finished_; }
 
 private:
@@ -34,16 +33,16 @@ private:
 
 	KamataEngine::WorldTransform worldTransformTitle_;
 
-	KamataEngine::Model* modelTitle_ = nullptr;
+	std::unique_ptr<KamataEngine::Model> modelTitle_;
 
-	SkyDome* skyDome_ = nullptr;
+	std::unique_ptr<SkyDome> skyDome_;
 
 	// 3Dモデル
-	KamataEngine::Model* modelSkyDome_ = nullptr;
+	std::unique_ptr<KamataEngine::Model> modelSkyDome_;
 
 	// ゲームオーバー画面の文字
-	KamataEngine::Sprite* retrySprite_ = nullptr;
-	KamataEngine::Sprite* hintSprite_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> retrySprite_;
+	std::unique_ptr<KamataEngine::Sprite> hintSprite_;
 
 	float titleAnimationTimer_ = 0.0f;
 };

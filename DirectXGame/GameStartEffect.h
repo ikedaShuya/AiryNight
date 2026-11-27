@@ -25,8 +25,6 @@ public:
 	// 経過時間
 	int GetTimer() const { return timer_; }
 
-	~GameStartEffect() override;
-
 private:
 
 	friend class GameStartStagePreviewState;
@@ -51,8 +49,8 @@ private:
 	int countdownNumber_ = 0;
 
 	// カウントダウン画像
-	KamataEngine::Sprite* countdown3Sprite_ = nullptr;
-	KamataEngine::Sprite* countdown2Sprite_ = nullptr;
-	KamataEngine::Sprite* countdown1Sprite_ = nullptr;
-	KamataEngine::Sprite* countdownGoSprite_ = nullptr;
+	std::unique_ptr<KamataEngine::Sprite> countdown3Sprite_;
+	std::unique_ptr<KamataEngine::Sprite> countdown2Sprite_;
+	std::unique_ptr<KamataEngine::Sprite> countdown1Sprite_;
+	std::unique_ptr<KamataEngine::Sprite> countdownGoSprite_;
 };

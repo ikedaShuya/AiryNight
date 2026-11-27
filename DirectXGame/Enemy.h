@@ -1,9 +1,9 @@
 #pragma once
+#include "Character.h"
+#include "EnemyMovementStrategy.h"
+#include "EnemyState.h"
 #include "KamataEngine.h"
 #include "Math.h"
-#include "Character.h"
-#include "EnemyState.h"
-#include "EnemyMovementStrategy.h"
 #include <memory>
 
 class Player;
@@ -28,6 +28,24 @@ public:
 
 	// 移動速度を取得
 	float GetVelocityX() const { return velocity_.x; }
+
+	// 移動戦略から速度を取得
+	float GetMoveVelocityX(const Player* player) const {
+		if (movementStrategy_) {
+			return movementStrategy_->GetMoveVelocityX(*this, player);
+		}
+
+		return velocity_.x;
+	}
+
+	// 壁にぶつかったときの移動処理
+	void OnMovementWallHit() {
+		if (movementStrategy_) {
+			movementStrategy_->OnWallHit(*this);
+		} else {
+			ReverseVelocityX();
+		}
+	}
 
 	// 歩行速度を取得
 	float GetWalkSpeed() const { return kWalkSpeed; }
@@ -57,16 +75,21 @@ public:
 	// デスフラグのgetter
 	bool IsDead() const { return isDead_; }
 
-private:
+	// 移動状態の処理
+	bool UpdateMovingState(const Player* player);
 
+	// 待機状態の処理
+	bool UpdateWaitingState();
+
+	// 落下状態の処理
+	bool UpdateFallingState();
+
+	// 死亡状態の処理
+	bool UpdateDeadState();
+
+private:
 	// 敵の剣との当たり判定
 	void CheckHitByPlayerSword(const Player* player);
-
-	// StateクラスからEnemyのメンバにアクセスする
-	friend class EnemyMovingState;
-	friend class EnemyWaitingState;
-	friend class EnemyFallingState;
-	friend class EnemyDeadState;
 
 	// 状態変更
 	void ChangeState(std::unique_ptr<EnemyState> newState);
@@ -136,7 +159,7 @@ private:
 	static constexpr int kInvincibleFrame = 20;
 
 	// ノックバック速度
-	KamataEngine::Vector3 knockbackVelocity_{ 0, 0, 0 };
+	KamataEngine::Vector3 knockbackVelocity_{0, 0, 0};
 
 	// ノックバック減衰率
 	static constexpr float kKnockbackAttenuation = 0.85f;

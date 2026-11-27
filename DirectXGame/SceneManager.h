@@ -2,6 +2,7 @@
 
 #include "Fade.h"
 #include "SceneFactory.h"
+#include <memory>
 
 class SceneManager {
 public:
@@ -22,7 +23,7 @@ private:
 	AiryNightSceneFactory sceneFactory_;
 
 	// 現在のシーンを管理する基底クラスのポインタ
-	Scene* currentScene_ = nullptr;
+	std::unique_ptr<Scene> currentScene_;
 
 	// 現在のシーン
 	SceneType scene_ = SceneType::kUnknown;

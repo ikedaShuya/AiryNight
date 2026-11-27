@@ -1,67 +1,52 @@
 #define NOMINMAX
 #include "Player.h"
 #include "MapChipField.h"
+#include "PlayerCommand.h"
 #include <algorithm>
 #include <numbers>
 #include <cassert>
+#include <utility>
 
 using namespace KamataEngine;
 
 // 通常状態
-PlayerStateType PlayerNormalState::Update(Player& player) {
+std::unique_ptr<PlayerState> PlayerNormalState::Update(Player& player) {
 
-	if (player.hp_ <= 0) {
-		return PlayerStateType::kDead;
+	if (player.IsDead()) {
+		return std::make_unique<PlayerDeadState>();
 	}
 
-	player.ProcessAttack();
+	player.UpdateMovement();
+	player.UpdateAttack();
 
-	if (player.isAttacking_) {
-		return PlayerStateType::kAttack;
+	if (player.IsAttacking()) {
+		return std::make_unique<PlayerAttackState>();
 	}
 
-	return PlayerStateType::kNormal;
+	return nullptr;
 }
 
 // 攻撃状態
-PlayerStateType PlayerAttackState::Update(Player& player) {
+std::unique_ptr<PlayerState> PlayerAttackState::Update(Player& player) {
 
-	if (player.hp_ <= 0) {
-		return PlayerStateType::kDead;
+	if (player.IsDead()) {
+		return std::make_unique<PlayerDeadState>();
 	}
 
-	player.ProcessAttack();
+	player.UpdateMovement();
+	player.UpdateAttack();
 
-	if (!player.isAttacking_) {
-		return PlayerStateType::kNormal;
+	if (!player.IsAttacking()) {
+		return std::make_unique<PlayerNormalState>();
 	}
 
-	return PlayerStateType::kAttack;
+	return nullptr;
 }
 
 // 死亡状態
-PlayerStateType PlayerDeadState::Update(Player& player) {
+std::unique_ptr<PlayerState> PlayerDeadState::Update(Player& player) {
 	(void)player;
-	return PlayerStateType::kDead;
-}
-
-void Player::ChangeState(PlayerStateType stateType) {
-
-	switch (stateType) {
-	case PlayerStateType::kNormal:
-		state_ = std::make_unique<PlayerNormalState>();
-		break;
-
-	case PlayerStateType::kAttack:
-		state_ = std::make_unique<PlayerAttackState>();
-		break;
-
-	case PlayerStateType::kDead:
-		state_ = std::make_unique<PlayerDeadState>();
-		break;
-	}
-
-	stateType_ = stateType;
+	return nullptr;
 }
 
 void Player::Initialize(Model* model, Model* swordModel, Camera* camera, const Vector3& position) { // NULLポインタチェック
@@ -84,28 +69,13 @@ void Player::Initialize(Model* model, Model* swordModel, Camera* camera, const V
 	worldTransform_.rotation_.y = std::numbers::pi_v<float> / 2.0f;
 	swordWorldTransform_.scale_ = swordScale_;
 
-	ChangeState(PlayerStateType::kNormal);
+	state_ = std::make_unique<PlayerNormalState>();
 }
 
 void Player::Update() {
 
 	if (!state_) {
-		ChangeState(PlayerStateType::kNormal);
-	}
-
-	// 死亡判定
-	if (hp_ <= 0 && stateType_ != PlayerStateType::kDead) {
-		ChangeState(PlayerStateType::kDead);
-	}
-
-	// 死亡状態
-	if (stateType_ == PlayerStateType::kDead) {
-		velocity_ = {};
-		isAttacking_ = false;
-
-		WorldTransformUpdate(worldTransform_);
-		WorldTransformUpdate(swordWorldTransform_);
-		return;
+		state_ = std::make_unique<PlayerNormalState>();
 	}
 
 	// ゲーム開始演出中は操作・物理処理を停止する
@@ -118,11 +88,44 @@ void Player::Update() {
 		return;
 	}
 
-	// 状態更新
-	PlayerStateType nextState = state_->Update(*this);
+	// コマンドを生成
+	MoveLeftCommand moveLeftCommand;
+	MoveRightCommand moveRightCommand;
+	JumpCommand jumpCommand;
+	AttackCommand attackCommand;
 
-	if (nextState != stateType_) {
-		ChangeState(nextState);
+	// キー入力に応じてコマンドを実行
+	if (Input::GetInstance()->PushKey(DIK_A)) {
+		moveLeftCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->PushKey(DIK_D)) {
+		moveRightCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+		jumpCommand.Execute(*this);
+	}
+
+	if (Input::GetInstance()->TriggerKey(DIK_J)) {
+		attackCommand.Execute(*this);
+	}
+
+	// 状態更新
+	std::unique_ptr<PlayerState> nextState = state_->Update(*this);
+
+	if (nextState) {
+		state_ = std::move(nextState);
+	}
+
+	// 死亡状態
+	if (state_->IsDead()) {
+		velocity_ = {};
+		isAttacking_ = false;
+
+		WorldTransformUpdate(worldTransform_);
+		WorldTransformUpdate(swordWorldTransform_);
+		return;
 	}
 
 	if (damageCoolTime_ > 0) {
@@ -131,6 +134,32 @@ void Player::Update() {
 
 	float swordOffsetX = 1.3f;
 	swordWorldTransform_.translation_ = worldTransform_.translation_ + Vector3((lrDirection_ == LRDirection::kRight ? 1 : -1) * swordOffsetX, 0.0f, 0.0f);
+
+	// 旋回制御
+	if (turnTimer_ > 0.0f) {
+
+		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
+
+		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
+
+		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
+
+		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
+	}
+
+	WorldTransformUpdate(worldTransform_);
+	WorldTransformUpdate(swordWorldTransform_);
+}
+
+void Player::Draw() {
+
+	// 3Dモデルを描画
+	model_->Draw(worldTransform_, *camera_);
+
+	modelSword_->Draw(swordWorldTransform_, *camera_);
+}
+
+void Player::UpdateMovement() {
 
 	// ジャンプ入力をバッファに保存
 	if (Input::GetInstance()->TriggerKey(DIK_SPACE)) {
@@ -161,29 +190,6 @@ void Player::Update() {
 	UpdateOnWall(collisionMapInfo);
 
 	ProcessJump();
-
-	// 旋回制御
-	if (turnTimer_ > 0.0f) {
-
-		turnTimer_ = std::max(turnTimer_ - (1.0f / 60.0f), 0.0f);
-
-		float destinationRotationYTable[] = {std::numbers::pi_v<float> / 2.0f, std::numbers::pi_v<float> * 3.0f / 2.0f};
-
-		float destinationRotationY = destinationRotationYTable[static_cast<uint32_t>(lrDirection_)];
-
-		worldTransform_.rotation_.y = EaseInOut(destinationRotationY, turnFirstRotationY_, turnTimer_ / kTimeTurn);
-	}
-
-	WorldTransformUpdate(worldTransform_);
-	WorldTransformUpdate(swordWorldTransform_);
-}
-
-void Player::Draw() {
-
-	// 3Dモデルを描画
-	model_->Draw(worldTransform_, *camera_);
-
-	modelSword_->Draw(swordWorldTransform_, *camera_);
 }
 
 void Player::InputMove() {
@@ -227,8 +233,11 @@ void Player::OnCollision(const Enemy* enemy) {
 void Player::InputHorizontal() {
 
 	// 左右入力がある？
-	bool pushD = Input::GetInstance()->PushKey(DIK_D);
-	bool pushA = Input::GetInstance()->PushKey(DIK_A);
+	bool pushD = requestMoveRight_;
+	bool pushA = requestMoveLeft_;
+
+	requestMoveRight_ = false;
+	requestMoveLeft_ = false;
 
 	if (!(pushD || pushA)) {
 		velocity_.x *= (1.0f - kAttenuation);
@@ -280,9 +289,11 @@ void Player::ApplyGravity() {
 
 void Player::ProcessJump() {
 
-	if (!Input::GetInstance()->TriggerKey(DIK_SPACE)) {
+	if (!requestJump_) {
 		return;
 	}
+
+	requestJump_ = false;
 
 	// バッファがなければジャンプしない
 	if (jumpBufferTimer_ <= 0) {
@@ -306,7 +317,8 @@ void Player::ProcessJump() {
 
 void Player::ProcessAttack() {
 
-	if (!isAttacking_ && Input::GetInstance()->TriggerKey(DIK_J)) {
+	if (!isAttacking_ && requestAttack_) {
+		requestAttack_ = false;
 		isAttacking_ = true;
 		attackTimer_ = kAttackFrame;
 
@@ -698,9 +710,19 @@ void Player::TakeDamage(int damage) {
 	if (damageCoolTime_ > 0) {
 		return;
 	}
+
 	hp_ -= damage;
 	hp_ = std::max(hp_, 0);
 	damageCoolTime_ = kDamageCoolTime;
+
+	// HP変更をオブザーバーに通知
+	for (PlayerHpObserver* observer : observers_) {
+		if (observer == nullptr) {
+			continue;
+		}
+
+		observer->OnHpChanged(hp_, maxHp_);
+	}
 }
 
 Vector3 Player::GetHeadWorldPosition() const {

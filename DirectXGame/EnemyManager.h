@@ -3,7 +3,8 @@
 #include "KamataEngine.h"
 #include "MapChipField.h"
 #include "StagePlacementData.h"
-#include <list>	
+#include <list>
+#include <memory>
 
 class EnemyManager {
 public:
@@ -12,11 +13,11 @@ public:
 	void Update(Player* player);
 	void Draw();
 	int RemoveDeadEnemies();
-	const std::list<Enemy*>& GetEnemies() const { return enemies_; }
+	const std::list<std::unique_ptr<Enemy>>& GetEnemies() const { return enemies_; }
 	~EnemyManager();
 
 private:
 	KamataEngine::Model* model_ = nullptr;
 	KamataEngine::Camera* camera_ = nullptr;
-	std::list<Enemy*> enemies_;
+	std::list<std::unique_ptr<Enemy>> enemies_;
 };

@@ -1,11 +1,11 @@
-
 #pragma once
 
+#include "FadeState.h"
 #include "KamataEngine.h"
+#include <memory>
 
 class Fade {
 public:
-
 	void Initialize();
 	void Update();
 	void Draw();
@@ -16,24 +16,21 @@ public:
 	bool IsFadeOutFinished() const { return fadeOutFinished_; }
 	bool IsFadeInFinished() const { return fadeInFinished_; }
 
+	// フェード状態から呼び出す更新処理
+	bool AdvanceFadeOut();
+	bool AdvanceFadeIn();
+
 private:
-
-	// フェードの状態
-	enum class Status {
-		kNone,
-		kFadeOut,
-		kFadeIn,
-	};
-
 	static const int kStarCount = 12;
 
-	KamataEngine::Sprite* sprite_ = nullptr;
-	KamataEngine::Sprite* stars_[kStarCount] = {};
+	std::unique_ptr<KamataEngine::Sprite> sprite_;
+	std::unique_ptr<KamataEngine::Sprite> stars_[kStarCount];
 
 	float starStartX_[kStarCount] = {};
 	float starStartY_[kStarCount] = {};
 
-	Status status_ = Status::kNone;
+	// 現在のフェード状態
+	std::unique_ptr<FadeState> state_;
 
 	float alpha_ = 0.0f;
 	float progress_ = 0.0f;

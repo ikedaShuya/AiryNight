@@ -12,9 +12,6 @@ void EnemyManager::Initialize(Model* model, Camera* camera) {
 void EnemyManager::Generate(const StagePlacementData& placementData, MapChipField* mapChipField) {
 
 	// 既存の敵を削除
-	for (Enemy* enemy : enemies_) {
-		delete enemy;
-	}
 	enemies_.clear();
 
 	
@@ -25,7 +22,7 @@ void EnemyManager::Generate(const StagePlacementData& placementData, MapChipFiel
 
 		Vector3 enemyPosition = mapChipField->GetMapChipPositionByIndex(position.x, position.y);
 
-		Enemy* enemy = new Enemy;
+		std::unique_ptr<Enemy> enemy = std::make_unique<Enemy>();
 
 		enemy->Initialize(model_, camera_, enemyPosition);
 		enemy->SetMapChipField(mapChipField);
@@ -39,20 +36,20 @@ void EnemyManager::Generate(const StagePlacementData& placementData, MapChipFiel
 			enemy->SetMovementStrategy(std::make_unique<PatrolMovementStrategy>());
 		}
 
-		enemies_.push_back(enemy);
+		enemies_.push_back(std::move(enemy));
 
 		enemyIndex++;
 	}
 }
 
 void EnemyManager::Update(Player* player) {
-	for (Enemy* enemy : enemies_) {
+	for (const std::unique_ptr<Enemy>& enemy : enemies_) {
 		enemy->Update(player);
 	}
 }
 
 void EnemyManager::Draw() {
-	for (Enemy* enemy : enemies_) {
+	for (const std::unique_ptr<Enemy>& enemy : enemies_) {
 		enemy->Draw();
 	}
 }
@@ -63,8 +60,7 @@ int EnemyManager::RemoveDeadEnemies() {
 
 	for (auto it = enemies_.begin(); it != enemies_.end();) {
 
-		if ((*it)->IsDead()) {	
-			delete *it;
+		if ((*it)->IsDead()) {
 			it = enemies_.erase(it);
 			removedCount++;
 		} else {
@@ -75,11 +71,4 @@ int EnemyManager::RemoveDeadEnemies() {
 	return removedCount;
 }
 
-EnemyManager::~EnemyManager() {
-	for (Enemy* enemy : enemies_) {
-		delete enemy;
-	}
-	enemies_.clear();
-
-	delete model_;
-}
+EnemyManager::~EnemyManager() { enemies_.clear(); }

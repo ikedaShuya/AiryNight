@@ -13,7 +13,7 @@ void ParticleManager::Initialize(Model* model, Camera* camera, bool isDeathParti
 
 	// パーティクルをあらかじめ生成してプールに格納
 	for (int i = 0; i < kPoolSize; i++) {
-		particlePool_.push_back(new Particle());
+		particlePool_.push_back(std::make_unique<Particle>());
 	}
 }
 
@@ -25,15 +25,12 @@ void ParticleManager::AddParticle(const Vector3& position, const Vector3& veloci
 		return;
 	}
 
-	// プールからパーティクルを取り出す
-	Particle* particle = particlePool_.back();
+	std::unique_ptr<Particle> particle = std::move(particlePool_.back());
 	particlePool_.pop_back();
 
-	// パーティクルを初期化
 	particle->Initialize(model_, camera_, position, velocity, acceleration, scale, rotationVelocity, lifeTime, isDeathParticle_);
 
-	// 使用中リストに追加
-	particles_.push_back(particle);
+	particles_.push_back(std::move(particle));
 }
 
 // 更新
@@ -44,11 +41,12 @@ void ParticleManager::Update() {
 		// 寿命が尽きたパーティクル
 		if (!particles_[i]->Update()) {
 
-			// プールに戻す
-			particlePool_.push_back(particles_[i]);
+			particlePool_.push_back(std::move(particles_[i]));
 
-			// 最後の要素と入れ替えて削除
-			particles_[i] = particles_.back();
+			if (i != static_cast<int>(particles_.size()) - 1) {
+				particles_[i] = std::move(particles_.back());
+			}
+
 			particles_.pop_back();
 
 		} else {
@@ -60,25 +58,7 @@ void ParticleManager::Update() {
 // 描画
 void ParticleManager::Draw() {
 
-	for (Particle* particle : particles_) {
+	for (const std::unique_ptr<Particle>& particle : particles_) {
 		particle->Draw();
 	}
-}
-
-// デストラクタ
-ParticleManager::~ParticleManager() {
-
-	// 使用中のパーティクルを解放
-	for (Particle* particle : particles_) {
-		delete particle;
-	}
-
-	particles_.clear();
-
-	// プール内のパーティクルを解放
-	for (Particle* particle : particlePool_) {
-		delete particle;
-	}
-
-	particlePool_.clear();
 }
